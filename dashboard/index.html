@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainLink — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0b0d;--bg2:#111318;--bg3:#181b22;--bg4:#1f232d;
+--tx:#e8e6e1;--tx2:#9a9890;--tx3:#5c5a55;
+--acc:#00e5a0;--acc2:#00b87d;--acc-dim:rgba(0,229,160,0.12);
+--red:#ff4d5a;--amber:#ffb020;--blue:#3d9eff;--purple:#a070ff;
+--pink:#ff5ca0;--teal:#00d4aa;
+--radius:6px;--radius-lg:10px;
+--font:'JetBrains Mono',monospace;--font-head:'Space Grotesk',sans-serif;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px;line-height:1.5;overflow-x:hidden}
+
+/* Layout */
+.shell{display:grid;grid-template-columns:1fr 320px;grid-template-rows:auto 1fr;height:100vh;gap:0}
+.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--bg2);border-bottom:1px solid rgba(255,255,255,0.04)}
+.topbar h1{font-family:var(--font-head);font-size:18px;font-weight:600;letter-spacing:-0.5px}
+.topbar h1 span{color:var(--acc)}
+.topbar .status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}
+.topbar .dot{width:7px;height:7px;border-radius:50%;background:var(--acc);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.main{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.sidebar{overflow-y:auto;padding:16px;background:var(--bg2);border-left:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:14px}
+
+/* Cards */
+.card{background:var(--bg3);border:1px solid rgba(255,255,255,0.04);border-radius:var(--radius-lg);padding:14px 16px}
+.card-head{font-family:var(--font-head);font-size:13px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+
+/* Metric bars */
+.metric-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.metric-row:last-child{margin-bottom:0}
+.metric-label{width:80px;font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
+.metric-bar-bg{flex:1;height:20px;background:var(--bg);border-radius:3px;overflow:hidden;position:relative}
+.metric-bar-fill{height:100%;border-radius:3px;transition:width 0.15s ease;position:relative}
+.metric-bar-fill::after{content:'';position:absolute;right:0;top:0;width:2px;height:100%;background:rgba(255,255,255,0.6);border-radius:1px}
+.metric-val{width:44px;font-size:12px;font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.metric-bar-fill.focus{background:linear-gradient(90deg,rgba(0,229,160,0.3),var(--acc))}
+.metric-bar-fill.calm{background:linear-gradient(90deg,rgba(61,158,255,0.3),var(--blue))}
+.metric-bar-fill.valence{background:linear-gradient(90deg,rgba(160,112,255,0.3),var(--purple))}
+.metric-bar-fill.instability{background:linear-gradient(90deg,rgba(255,176,32,0.3),var(--amber))}
+.metric-bar-fill.stress{background:linear-gradient(90deg,rgba(255,77,90,0.3),var(--red))}
+.metric-bar-fill.flow{background:linear-gradient(90deg,rgba(255,92,160,0.3),var(--pink))}
+
+/* Combo pills */
+.combo-zone{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+.combo-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;border:1px solid}
+.combo-pill.active{animation:combo-glow 1.5s ease infinite}
+.combo-pill.cooldown{opacity:0.35}
+.combo-pill.super_flow{color:var(--acc);border-color:var(--acc);background:var(--acc-dim)}
+.combo-pill.panic{color:var(--red);border-color:var(--red);background:rgba(255,77,90,0.1)}
+.combo-pill.zen_heal{color:var(--blue);border-color:var(--blue);background:rgba(61,158,255,0.1)}
+.combo-pill.berserker{color:var(--amber);border-color:var(--amber);background:rgba(255,176,32,0.1)}
+@keyframes combo-glow{0%,100%{box-shadow:0 0 8px rgba(255,255,255,0.05)}50%{box-shadow:0 0 16px rgba(255,255,255,0.12)}}
+
+/* EEG wave canvas */
+.wave-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wave-card{background:var(--bg);border-radius:var(--radius);padding:8px;position:relative}
+.wave-card .ch-name{position:absolute;top:6px;left:10px;font-size:10px;color:var(--tx3);font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.wave-card canvas{width:100%;height:80px;display:block}
+
+/* Band powers */
+.band-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.band-cell{background:var(--bg);border-radius:var(--radius);padding:8px;text-align:center}
+.band-cell .ch{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.band-bars{display:flex;align-items:flex-end;justify-content:center;gap:2px;height:40px}
+.band-bar{width:8px;border-radius:2px 2px 0 0;transition:height 0.15s ease;min-height:2px}
+.band-bar.delta{background:#6366f1}
+.band-bar.theta{background:#f59e0b}
+.band-bar.alpha{background:var(--acc)}
+.band-bar.beta{background:var(--blue)}
+.band-bar.gamma{background:var(--pink)}
+
+/* Calibration */
+.cal-step{display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--radius);margin-bottom:4px;background:var(--bg);transition:all .2s}
+.cal-step.active{background:var(--bg4);border:1px solid rgba(0,229,160,0.2)}
+.cal-step.done{opacity:0.5}
+.cal-step .idx{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;background:var(--bg3);color:var(--tx3);flex-shrink:0}
+.cal-step.done .idx{background:var(--acc);color:var(--bg)}
+.cal-step.active .idx{background:var(--acc-dim);color:var(--acc)}
+.cal-step .info{font-size:12px;color:var(--tx2)}
+.cal-step.active .info{color:var(--tx)}
+
+/* Settings */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.setting-row:last-child{border-bottom:none}
+.setting-row label{font-size:11px;color:var(--tx2)}
+.setting-row input[type=range]{width:100px;accent-color:var(--acc)}
+.setting-row .val{font-size:11px;color:var(--acc);width:36px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* State buttons */
+.state-btns{display:flex;flex-wrap:wrap;gap:6px}
+.state-btn{padding:5px 12px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.08);background:var(--bg);color:var(--tx2);font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s}
+.state-btn:hover{border-color:var(--acc);color:var(--acc)}
+.state-btn.active{background:var(--acc-dim);color:var(--acc);border-color:var(--acc)}
+
+/* Band legend */
+.band-legend{display:flex;gap:10px;justify-content:center;margin-top:8px}
+.band-legend span{font-size:10px;color:var(--tx3);display:flex;align-items:center;gap:4px}
+.band-legend span::before{content:'';width:8px;height:8px;border-radius:2px;display:inline-block}
+.band-legend .l-delta::before{background:#6366f1}
+.band-legend .l-theta::before{background:#f59e0b}
+.band-legend .l-alpha::before{background:var(--acc)}
+.band-legend .l-beta::before{background:var(--blue)}
+.band-legend .l-gamma::before{background:var(--pink)}
+
+/* Connection info */
+.conn-info{font-size:11px;color:var(--tx3);text-align:center;padding:8px}
+
+/* Tabs */
+.tab-row{display:flex;gap:0;margin-bottom:10px}
+.tab-btn{flex:1;padding:7px 0;text-align:center;font-family:var(--font);font-size:11px;background:var(--bg);color:var(--tx3);border:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:0.5px}
+.tab-btn:first-child{border-radius:var(--radius) 0 0 var(--radius)}
+.tab-btn:last-child{border-radius:0 var(--radius) var(--radius) 0}
+.tab-btn.active{background:var(--bg4);color:var(--acc);border-color:rgba(0,229,160,0.15)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Top bar -->
+<div class="topbar">
+  <h1>Brain<span>Link</span></h1>
+  <div class="status">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">Łączenie...</span>
+    <span style="margin-left:12px;color:var(--tx3)" id="fpsCounter">0 fps</span>
+  </div>
+</div>
+
+<!-- Main area -->
+<div class="main">
+
+  <!-- Live metrics -->
+  <div class="card">
+    <div class="card-head">Metryki w czasie rzeczywistym</div>
+    <div id="metricsContainer">
+      <div class="metric-row"><span class="metric-label">Skupienie</span><div class="metric-bar-bg"><div class="metric-bar-fill focus" id="bar-focus" style="width:0%"></div></div><span class="metric-val" id="val-focus">0.00</span></div>
+      <div class="metric-row"><span class="metric-label">Spokój</span><div class="metric-bar-bg"><div class="metric-bar-fill calm" id="bar-calm" style="width:0%"></div></div><span class="metric-val" id="val-calm">0.00</span></div>
+      <div class="metric-row"><span class="metric-label">Waleczność</span><div class="metric-bar-bg"><div class="metric-bar-fill valence" id="bar-valence" style="width:0%"></div></div><span class="metric-val" id="val-valence">0.00</span></div>
+      <div class="metric-row"><span class="metric-label">Niestabil.</span><div class="metric-bar-bg"><div class="metric-bar-fill instability" id="bar-instability" style="width:0%"></div></div><span class="metric-val" id="val-instability">0.00</span></div>
+      <div class="metric-row"><span class="metric-label">Stres</span><div class="metric-bar-bg"><div class="metric-bar-fill stress" id="bar-stress" style="width:0%"></div></div><span class="metric-val" id="val-stress">0.00</span></div>
+      <div class="metric-row"><span class="metric-label">Flow</span><div class="metric-bar-bg"><div class="metric-bar-fill flow" id="bar-flow" style="width:0%"></div></div><span class="metric-val" id="val-flow">0.00</span></div>
+    </div>
+  </div>
+
+  <!-- Combos -->
+  <div class="card">
+    <div class="card-head">Aktywne combo</div>
+    <div class="combo-zone" id="comboZone">
+      <span style="font-size:11px;color:var(--tx3)">Brak aktywnych combo</span>
+    </div>
+  </div>
+
+  <!-- EEG waves -->
+  <div class="card">
+    <div class="card-head">Surowe sygnały EEG</div>
+    <div class="wave-grid">
+      <div class="wave-card"><span class="ch-name">Fp1</span><canvas id="wave-Fp1"></canvas></div>
+      <div class="wave-card"><span class="ch-name">Fp2</span><canvas id="wave-Fp2"></canvas></div>
+      <div class="wave-card"><span class="ch-name">O1</span><canvas id="wave-O1"></canvas></div>
+      <div class="wave-card"><span class="ch-name">O2</span><canvas id="wave-O2"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Band powers -->
+  <div class="card">
+    <div class="card-head">Moc pasm częstotliwości</div>
+    <div class="band-grid" id="bandGrid">
+      <div class="band-cell"><div class="ch">Fp1</div><div class="band-bars" id="bands-Fp1"></div></div>
+      <div class="band-cell"><div class="ch">Fp2</div><div class="band-bars" id="bands-Fp2"></div></div>
+      <div class="band-cell"><div class="ch">O1</div><div class="band-bars" id="bands-O1"></div></div>
+      <div class="band-cell"><div class="ch">O2</div><div class="band-bars" id="bands-O2"></div></div>
+    </div>
+    <div class="band-legend">
+      <span class="l-delta">Delta</span><span class="l-theta">Theta</span>
+      <span class="l-alpha">Alfa</span><span class="l-beta">Beta</span><span class="l-gamma">Gamma</span>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+
+  <!-- Sidebar tabs -->
+  <div class="tab-row">
+    <div class="tab-btn active" onclick="showTab('tab-cal')">Kalibracja</div>
+    <div class="tab-btn" onclick="showTab('tab-set')">Parametry</div>
+    <div class="tab-btn" onclick="showTab('tab-sim')">Symulator</div>
+  </div>
+
+  <!-- Calibration tab -->
+  <div class="tab-panel active" id="tab-cal">
+    <div class="card">
+      <div class="card-head">Kalibracja<span id="calStatus" style="font-size:10px;color:var(--tx3);text-transform:none;letter-spacing:0">Nierozpoczęta</span></div>
+      <div id="calSteps">
+        <div class="cal-step" data-step="baseline"><div class="idx">1</div><div class="info">Baseline — oczy otwarte (30s)</div></div>
+        <div class="cal-step" data-step="eyes_closed"><div class="idx">2</div><div class="info">Oczy zamknięte — relaks (30s)</div></div>
+        <div class="cal-step" data-step="focus"><div class="idx">3</div><div class="info">Skupienie — licz wstecz (30s)</div></div>
+        <div class="cal-step" data-step="stress"><div class="idx">4</div><div class="info">Stres — szybki timer (20s)</div></div>
+        <div class="cal-step" data-step="flow"><div class="idx">5</div><div class="info">Flow — migający punkt (20s)</div></div>
+      </div>
+      <button class="state-btn" style="margin-top:10px;width:100%;padding:8px" id="calBtn" onclick="handleCalibration()">Rozpocznij kalibrację</button>
+    </div>
+  </div>
+
+  <!-- Settings tab -->
+  <div class="tab-panel" id="tab-set">
+    <div class="card">
+      <div class="card-head">Czułość metryk</div>
+      <div id="sensitivitySettings"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">Dead zone</div>
+      <div id="deadZoneSettings"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">Smoothing</div>
+      <div id="smoothingSettings"></div>
+    </div>
+    <div class="card">
+      <div class="card-head">Combo</div>
+      <div id="comboSettings"></div>
+    </div>
+    <button class="state-btn" style="margin-top:6px;width:100%;padding:8px" onclick="resetSettings()">Reset do kalibracji</button>
+  </div>
+
+  <!-- Simulator tab -->
+  <div class="tab-panel" id="tab-sim">
+    <div class="card">
+      <div class="card-head">Ręczne stany<span id="simStateLabel" style="font-size:10px;color:var(--acc);text-transform:none;letter-spacing:0">baseline</span></div>
+      <div class="state-btns" id="stateButtons">
+        <button class="state-btn active" onclick="setSimState('baseline')">Baseline</button>
+        <button class="state-btn" onclick="setSimState('eyes_closed')">Zamkn. oczy</button>
+        <button class="state-btn" onclick="setSimState('focus')">Skupienie</button>
+        <button class="state-btn" onclick="setSimState('stress')">Stres</button>
+        <button class="state-btn" onclick="setSimState('panic_spike')">Panika!</button>
+        <button class="state-btn" onclick="setSimState('flow')">Flow</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">Auto-scenariusze<span id="autoLabel" style="font-size:10px;color:var(--tx3);text-transform:none;letter-spacing:0">Nieaktywny</span></div>
+      <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">Automatyczne sekwencje stanów symulujące realne sesje grania</p>
+      <div class="state-btns" style="margin-bottom:10px">
+        <button class="state-btn" onclick="startScenario('gaming_session')">Sesja gry</button>
+        <button class="state-btn" onclick="startScenario('horror_game')">Horror</button>
+        <button class="state-btn" onclick="startScenario('meditation_trainer')">Medytacja</button>
+        <button class="state-btn" onclick="startScenario('crafting_focus')">Crafting</button>
+      </div>
+      <button class="state-btn" style="width:100%;padding:6px;border-color:var(--red);color:var(--red)" onclick="stopScenario()">Zatrzymaj scenariusz</button>
+      <!-- Auto progress display -->
+      <div id="autoProgress" style="display:none;margin-top:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx2);margin-bottom:6px">
+          <span id="autoStepInfo">Krok 1/8</span>
+          <span id="autoTimeInfo">8s</span>
+        </div>
+        <div style="height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
+          <div id="autoProgressBar" style="height:100%;background:var(--acc);border-radius:2px;transition:width 0.3s;width:0%"></div>
+        </div>
+        <div id="autoTimeline" style="display:flex;gap:2px;margin-top:8px;height:20px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">Połączenie</div>
+      <div class="conn-info" id="connInfo">
+        WebSocket: ws://localhost:8420/api/v1/stream<br>
+        REST API: http://localhost:8420/api/v1/<br>
+        Scenariusze: GET /api/v1/debug/scenarios<br>
+        Push rate: 10 Hz
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const CHANNELS = ['Fp1','Fp2','O1','O2'];
+const BANDS = ['delta','theta','alpha','beta','gamma'];
+const METRICS = ['focus','calm','valence','instability','stress','flow'];
+const METRIC_NAMES = {focus:'Skupienie',calm:'Spokój',valence:'Waleczność',instability:'Niestabil.',stress:'Stres',flow:'Flow'};
+const COMBO_NAMES = ['super_flow','panic','zen_heal','berserker'];
+
+let ws = null;
+let frameCount = 0;
+let lastFpsTime = Date.now();
+let waveHistories = {};
+CHANNELS.forEach(ch => waveHistories[ch] = []);
+
+// ─── Wave rendering ───────────────────────────────────────────────
+const waveCanvases = {};
+const waveCtxs = {};
+CHANNELS.forEach(ch => {
+  const c = document.getElementById('wave-'+ch);
+  c.width = c.offsetWidth * 2;
+  c.height = 160;
+  waveCanvases[ch] = c;
+  waveCtxs[ch] = c.getContext('2d');
+});
+
+function drawWave(ch, newSamples) {
+  const hist = waveHistories[ch];
+  hist.push(...newSamples);
+  if (hist.length > 300) hist.splice(0, hist.length - 300);
+
+  const ctx = waveCtxs[ch];
+  const w = waveCanvases[ch].width;
+  const h = waveCanvases[ch].height;
+  ctx.clearRect(0,0,w,h);
+
+  if (hist.length < 2) return;
+  const color = ch.startsWith('F') ? '#00e5a0' : '#3d9eff';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  const step = w / 300;
+  const mid = h / 2;
+  const scale = h / 160;
+  for (let i = 0; i < hist.length; i++) {
+    const x = i * step;
+    const y = mid - hist[i] * scale;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+// ─── Band power bars ──────────────────────────────────────────────
+CHANNELS.forEach(ch => {
+  const container = document.getElementById('bands-'+ch);
+  BANDS.forEach(band => {
+    const bar = document.createElement('div');
+    bar.className = 'band-bar ' + band;
+    bar.id = 'bb-'+ch+'-'+band;
+    bar.style.height = '2px';
+    container.appendChild(bar);
+  });
+});
+
+function updateBands(bandPowers) {
+  if (!bandPowers) return;
+  CHANNELS.forEach(ch => {
+    const chData = bandPowers[ch];
+    if (!chData) return;
+    const maxVal = Math.max(...BANDS.map(b => chData[b] || 0), 1);
+    BANDS.forEach(band => {
+      const el = document.getElementById('bb-'+ch+'-'+band);
+      const val = chData[band] || 0;
+      el.style.height = Math.max(2, (val / maxVal) * 38) + 'px';
+    });
+  });
+}
+
+// ─── Metrics ──────────────────────────────────────────────────────
+function updateMetrics(metrics) {
+  if (!metrics) return;
+  METRICS.forEach(m => {
+    const val = metrics[m] || 0;
+    const pct = Math.round(val * 100);
+    document.getElementById('bar-'+m).style.width = pct + '%';
+    document.getElementById('val-'+m).textContent = val.toFixed(2);
+  });
+}
+
+// ─── Combos ───────────────────────────────────────────────────────
+function updateCombos(activeCombos, comboTimers) {
+  const zone = document.getElementById('comboZone');
+  let html = '';
+  COMBO_NAMES.forEach(name => {
+    const isActive = activeCombos && activeCombos.includes(name);
+    const timer = comboTimers && comboTimers[name];
+    const isCooldown = timer && timer.cooldown_remaining > 0;
+
+    if (isActive) {
+      html += `<span class="combo-pill active ${name}">${name.replace('_',' ')} (${timer?.active_sec || 0}s)</span>`;
+    } else if (isCooldown) {
+      html += `<span class="combo-pill cooldown ${name}">${name.replace('_',' ')} CD:${timer.cooldown_remaining}s</span>`;
+    }
+  });
+  zone.innerHTML = html || '<span style="font-size:11px;color:var(--tx3)">Brak aktywnych combo</span>';
+}
+
+// ─── FPS counter ──────────────────────────────────────────────────
+function updateFps() {
+  frameCount++;
+  const now = Date.now();
+  if (now - lastFpsTime >= 1000) {
+    document.getElementById('fpsCounter').textContent = frameCount + ' fps';
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+}
+
+// ─── WebSocket ────────────────────────────────────────────────────
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/v1/stream');
+
+  ws.onopen = () => {
+    document.getElementById('statusText').textContent = 'Połączono';
+    document.getElementById('statusDot').style.background = 'var(--acc)';
+  };
+  ws.onclose = () => {
+    document.getElementById('statusText').textContent = 'Rozłączono — ponawiam...';
+    document.getElementById('statusDot').style.background = 'var(--red)';
+    setTimeout(connect, 2000);
+  };
+  ws.onerror = () => ws.close();
+
+  ws.onmessage = (e) => {
+    const frame = JSON.parse(e.data);
+    updateFps();
+
+    // raw waves
+    if (frame.raw_preview) {
+      CHANNELS.forEach(ch => {
+        if (frame.raw_preview[ch]) drawWave(ch, frame.raw_preview[ch]);
+      });
+    }
+
+    updateBands(frame.band_powers);
+    updateMetrics(frame.metrics);
+    updateCombos(frame.active_combos, frame.combo_timers);
+    updateSimulatorDisplay(frame.simulator);
+  };
+}
+
+// ─── Simulator state ──────────────────────────────────────────────
+function setSimState(state) {
+  fetch('/api/v1/debug/set-state/' + state, {method:'POST'});
+  document.querySelectorAll('#stateButtons .state-btn').forEach(b => b.classList.remove('active'));
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify({action:'set_state',state}));
+}
+
+function startScenario(name) {
+  fetch('/api/v1/debug/set-state/auto:' + name, {method:'POST'});
+  document.getElementById('autoLabel').textContent = name.replace('_',' ');
+  document.getElementById('autoLabel').style.color = 'var(--acc)';
+  document.getElementById('autoProgress').style.display = 'block';
+}
+
+function stopScenario() {
+  fetch('/api/v1/debug/set-state/auto_stop', {method:'POST'});
+  document.getElementById('autoLabel').textContent = 'Nieaktywny';
+  document.getElementById('autoLabel').style.color = 'var(--tx3)';
+  document.getElementById('autoProgress').style.display = 'none';
+}
+
+const STATE_COLORS = {
+  baseline:'var(--tx3)',eyes_closed:'var(--blue)',focus:'var(--acc)',
+  stress:'var(--red)',panic_spike:'var(--red)',flow:'var(--pink)'
+};
+
+function updateSimulatorDisplay(simInfo) {
+  if (!simInfo) return;
+  // current state label
+  const label = document.getElementById('simStateLabel');
+  const rawState = simInfo.state || 'baseline';
+  const displayState = rawState.includes('>') ? rawState.split('>')[1] : rawState;
+  label.textContent = displayState;
+  label.style.color = STATE_COLORS[displayState] || 'var(--acc)';
+
+  // highlight active manual button
+  document.querySelectorAll('#stateButtons .state-btn').forEach(b => {
+    const btnState = b.textContent.toLowerCase();
+    const isMatch = displayState === 'panic_spike' ? btnState.includes('panik') :
+                    displayState === 'eyes_closed' ? btnState.includes('zamkn') :
+                    btnState.includes(displayState.substring(0,4));
+    b.classList.toggle('active', isMatch);
+  });
+
+  // auto progress
+  if (simInfo.auto_mode && simInfo.auto_progress) {
+    const p = simInfo.auto_progress;
+    document.getElementById('autoProgress').style.display = 'block';
+    document.getElementById('autoStepInfo').textContent =
+      `Krok ${p.step_idx+1}/${p.total_steps}: ${p.current_state}`;
+    document.getElementById('autoTimeInfo').textContent = p.step_remaining_sec + 's';
+    const pct = ((p.step_idx) / p.total_steps) * 100;
+    document.getElementById('autoProgressBar').style.width = pct + '%';
+  } else {
+    if (document.getElementById('autoProgress').style.display !== 'none') {
+      document.getElementById('autoLabel').textContent = 'Nieaktywny';
+      document.getElementById('autoLabel').style.color = 'var(--tx3)';
+      document.getElementById('autoProgress').style.display = 'none';
+    }
+  }
+}
+
+// ─── Calibration ──────────────────────────────────────────────────
+let calSession = null;
+let calStepIdx = 0;
+const CAL_STEPS = ['baseline','eyes_closed','focus','stress','flow'];
+const CAL_DURATIONS = [30,30,30,20,20];
+let calTimer = null;
+
+async function handleCalibration() {
+  const btn = document.getElementById('calBtn');
+
+  if (!calSession) {
+    // start
+    const res = await fetch('/api/v1/calibration/start', {method:'POST'});
+    calSession = await res.json();
+    calStepIdx = 0;
+    btn.textContent = 'Zakończ krok (baseline)';
+    document.getElementById('calStatus').textContent = 'W trakcie...';
+    updateCalStepUI();
+    startCalTimer();
+    return;
+  }
+
+  // complete current step
+  clearInterval(calTimer);
+  const step = CAL_STEPS[calStepIdx];
+  const res = await fetch(`/api/v1/calibration/${calSession.session_id}/step/${step}/complete`, {method:'POST'});
+  const result = await res.json();
+
+  calStepIdx++;
+  updateCalStepUI();
+
+  if (result.completed) {
+    calSession = null;
+    btn.textContent = 'Ponów kalibrację';
+    document.getElementById('calStatus').textContent = 'Zakończona';
+    // load profile
+    loadSettings();
+  } else {
+    btn.textContent = `Zakończ krok (${result.next_step})`;
+    startCalTimer();
+  }
+}
+
+function updateCalStepUI() {
+  document.querySelectorAll('.cal-step').forEach((el, i) => {
+    el.className = 'cal-step' + (i < calStepIdx ? ' done' : i === calStepIdx ? ' active' : '');
+  });
+}
+
+function startCalTimer() {
+  let remaining = CAL_DURATIONS[calStepIdx];
+  const btn = document.getElementById('calBtn');
+  const step = CAL_STEPS[calStepIdx];
+  calTimer = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(calTimer);
+      btn.textContent = `Zakończ krok (${step}) — GOTOWE`;
+    } else {
+      btn.textContent = `Zakończ krok (${step}) — ${remaining}s`;
+    }
+  }, 1000);
+}
+
+// ─── Settings ─────────────────────────────────────────────────────
+async function loadSettings() {
+  const res = await fetch('/api/v1/users/default/settings');
+  const data = await res.json();
+  renderSettings(data);
+}
+
+function renderSettings(data) {
+  // Sensitivity sliders
+  let html = '';
+  METRICS.forEach(m => {
+    const s = data.metrics[m];
+    html += `<div class="setting-row"><label>${METRIC_NAMES[m]}</label>
+      <input type="range" min="0.1" max="3" step="0.1" value="${s?.sensitivity||1}" onchange="patchMetric('${m}','sensitivity',this.value)">
+      <span class="val" id="sens-${m}">${(s?.sensitivity||1).toFixed(1)}</span></div>`;
+  });
+  document.getElementById('sensitivitySettings').innerHTML = html;
+
+  // Dead zone
+  html = '';
+  METRICS.forEach(m => {
+    const s = data.metrics[m];
+    html += `<div class="setting-row"><label>${METRIC_NAMES[m]}</label>
+      <input type="range" min="0" max="0.3" step="0.01" value="${s?.dead_zone||0.05}" onchange="patchMetric('${m}','dead_zone',this.value)">
+      <span class="val" id="dz-${m}">${(s?.dead_zone||0.05).toFixed(2)}</span></div>`;
+  });
+  document.getElementById('deadZoneSettings').innerHTML = html;
+
+  // Smoothing
+  html = '';
+  METRICS.forEach(m => {
+    const s = data.metrics[m];
+    html += `<div class="setting-row"><label>${METRIC_NAMES[m]}</label>
+      <input type="range" min="0" max="0.9" step="0.05" value="${s?.smoothing||0.3}" onchange="patchMetric('${m}','smoothing',this.value)">
+      <span class="val" id="sm-${m}">${(s?.smoothing||0.3).toFixed(2)}</span></div>`;
+  });
+  document.getElementById('smoothingSettings').innerHTML = html;
+
+  // Combos
+  html = '';
+  COMBO_NAMES.forEach(name => {
+    const c = data.combos[name];
+    const checked = c?.enabled !== false ? 'checked' : '';
+    html += `<div class="setting-row"><label>${name.replace('_',' ')}</label>
+      <input type="checkbox" ${checked} onchange="patchCombo('${name}','enabled',this.checked)"></div>`;
+  });
+  document.getElementById('comboSettings').innerHTML = html;
+}
+
+async function patchMetric(metric, param, value) {
+  const numVal = parseFloat(value);
+  const body = {metrics:{[metric]:{[param]:numVal}}};
+  await fetch('/api/v1/users/default/settings', {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  });
+  // update label
+  const prefix = param === 'sensitivity' ? 'sens' : param === 'dead_zone' ? 'dz' : 'sm';
+  const el = document.getElementById(`${prefix}-${metric}`);
+  if (el) el.textContent = param === 'sensitivity' ? numVal.toFixed(1) : numVal.toFixed(2);
+}
+
+async function patchCombo(combo, param, value) {
+  const body = {combos:{[combo]:{[param]:value}}};
+  await fetch('/api/v1/users/default/settings', {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  });
+}
+
+async function resetSettings() {
+  await fetch('/api/v1/users/default/settings/reset', {method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  loadSettings();
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────
+connect();
+loadSettings();
+
+// handle canvas resize
+window.addEventListener('resize', () => {
+  CHANNELS.forEach(ch => {
+    const c = waveCanvases[ch];
+    c.width = c.offsetWidth * 2;
+  });
+});
+</script>
+</body>
+</html>
