@@ -21,18 +21,11 @@ brainlink-desktop/
 │   └── index.html      ← Real-time monitoring dashboard
 ├── recordings/         ← Saved EEG sessions (gitignored)
 ├── requirements.txt
-├── START.bat           ← Double-click launcher (Windows)
-├── start.sh            ← Double-click launcher (macOS / Linux)
 └── LICENSE
 ```
 
 ## Quick start
 
-### Option A — double-click
-- **Windows**: `START.bat`
-- **macOS / Linux**: `start.sh`  (first run: `chmod +x start.sh`)
-
-### Option B — command line
 ```bash
 python run.py
 ```
