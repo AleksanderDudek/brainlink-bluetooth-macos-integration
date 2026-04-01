@@ -146,4 +146,4 @@ brainlink/
 
 ## License
 
-[MIT](LICENSE)
+[GNU Affero General Public License v3.0](LICENSE) — you may use, study, and modify this software freely, but any distributed or network-hosted derivative must also be released under AGPL v3. Commercial use requires the author's written permission.
