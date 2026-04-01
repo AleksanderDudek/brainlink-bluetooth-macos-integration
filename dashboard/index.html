@@ -111,8 +111,25 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
 .band-legend .l-beta::before{background:var(--blue)}
 .band-legend .l-gamma::before{background:var(--pink)}
 
-/* Connection info */
-.conn-info{font-size:11px;color:var(--tx3);text-align:center;padding:8px}
+/* Device toggle */
+.dev-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg);border-radius:var(--radius);margin-bottom:10px}
+.dev-toggle .dev-label{font-size:12px;color:var(--tx2)}
+.toggle-switch{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--bg4);border-radius:12px;transition:.2s;border:1px solid rgba(255,255,255,0.06)}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:2px;bottom:2px;background:var(--tx3);border-radius:50%;transition:.2s}
+.toggle-switch input:checked+.toggle-slider{background:var(--acc-dim);border-color:var(--acc)}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px);background:var(--acc)}
+.dev-status{padding:10px;border-radius:var(--radius);background:var(--bg);margin-bottom:10px;font-size:11px}
+.dev-status .status-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--tx2)}
+.dev-status .status-val{color:var(--tx);font-weight:500}
+.dev-status .status-val.on{color:var(--acc)}
+.dev-status .status-val.off{color:var(--red)}
+.source-btns{display:flex;gap:4px;margin-bottom:10px}
+.source-btn{flex:1;padding:6px 0;text-align:center;font-family:var(--font);font-size:11px;background:var(--bg);color:var(--tx3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:0.5px}
+.source-btn.active{background:var(--acc-dim);color:var(--acc);border-color:var(--acc)}
+.source-btn.off-active{background:rgba(255,77,90,0.1);color:var(--red);border-color:var(--red)}
+.sim-section{border-top:1px solid rgba(255,255,255,0.04);padding-top:10px;margin-top:6px}
 
 /* Tabs */
 .tab-row{display:flex;gap:0;margin-bottom:10px}
@@ -122,6 +139,56 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
 .tab-btn.active{background:var(--bg4);color:var(--acc);border-color:rgba(0,229,160,0.15)}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
+
+/* Recording UI */
+.rec-field{margin-bottom:10px}
+.rec-field label{display:block;font-size:11px;color:var(--tx2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.rec-field input[type=text],.rec-field textarea{width:100%;padding:6px 8px;background:var(--bg);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);color:var(--tx);font-family:var(--font);font-size:12px;outline:none}
+.rec-field input[type=text]:focus,.rec-field textarea:focus{border-color:var(--acc)}
+.rec-field textarea{resize:vertical;min-height:50px}
+.rec-duration{display:flex;align-items:center;gap:8px}
+.rec-duration input[type=range]{flex:1;accent-color:var(--acc)}
+.rec-duration .val{font-size:12px;color:var(--acc);width:40px;text-align:right;font-variant-numeric:tabular-nums}
+.rec-timer{text-align:center;padding:16px 0;font-family:var(--font-head);font-size:28px;font-weight:600;color:var(--acc);letter-spacing:2px}
+.rec-progress{height:4px;background:var(--bg);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.rec-progress-bar{height:100%;background:var(--acc);border-radius:2px;transition:width 0.5s}
+.rec-btn{width:100%;padding:8px;border-radius:var(--radius);border:1px solid;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:0.5px}
+.rec-btn.start{background:var(--acc-dim);color:var(--acc);border-color:var(--acc)}
+.rec-btn.start:hover{background:var(--acc);color:var(--bg)}
+.rec-btn.stop{background:rgba(255,77,90,0.1);color:var(--red);border-color:var(--red)}
+.rec-btn.stop:hover{background:var(--red);color:#fff}
+.rec-info{font-size:11px;color:var(--tx3);text-align:center;margin-top:6px}
+
+/* Recording indicator */
+.rec-indicator{display:none;align-items:center;gap:6px;margin-left:16px}
+.rec-indicator.active{display:flex}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:rec-blink 1s ease infinite}
+@keyframes rec-blink{0%,100%{opacity:1}50%{opacity:.3}}
+.rec-label{font-size:11px;color:var(--red);font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+
+/* Recordings list */
+.rec-list{max-height:300px;overflow-y:auto}
+.rec-item{display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg);border-radius:var(--radius);margin-bottom:4px;cursor:pointer;transition:all .15s}
+.rec-item:hover{background:var(--bg4)}
+.rec-item .rec-item-info{flex:1;min-width:0}
+.rec-item .rec-item-name{font-size:12px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-item .rec-item-meta{font-size:10px;color:var(--tx3)}
+.rec-item-actions{display:flex;gap:4px;flex-shrink:0}
+.rec-item-actions button{padding:3px 8px;border-radius:3px;border:1px solid rgba(255,255,255,0.08);background:var(--bg3);color:var(--tx2);font-family:var(--font);font-size:10px;cursor:pointer}
+.rec-item-actions button:hover{border-color:var(--acc);color:var(--acc)}
+.rec-item-actions button.del:hover{border-color:var(--red);color:var(--red)}
+
+/* Chart overlay */
+.chart-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;padding:40px;overflow-y:auto}
+.chart-overlay.active{display:block}
+.chart-overlay .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.chart-overlay .chart-title{font-family:var(--font-head);font-size:20px;font-weight:600;color:var(--tx)}
+.chart-overlay .chart-close{padding:6px 16px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.1);background:var(--bg3);color:var(--tx2);font-family:var(--font);font-size:12px;cursor:pointer}
+.chart-overlay .chart-close:hover{color:var(--tx);border-color:var(--acc)}
+.chart-overlay .chart-notes{font-size:12px;color:var(--tx2);margin-bottom:16px;padding:10px;background:var(--bg3);border-radius:var(--radius)}
+.chart-channel{background:var(--bg2);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px}
+.chart-channel .ch-label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.chart-channel canvas{width:100%;height:120px;display:block}
 </style>
 </head>
 <body>
@@ -134,6 +201,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
     <div class="dot" id="statusDot"></div>
     <span id="statusText">Łączenie...</span>
     <span style="margin-left:12px;color:var(--tx3)" id="fpsCounter">0 fps</span>
+    <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div><span class="rec-label" id="recTimerTop">REC 00:00</span></div>
   </div>
 </div>
 
@@ -195,7 +263,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
   <div class="tab-row">
     <div class="tab-btn active" onclick="showTab('tab-cal')">Kalibracja</div>
     <div class="tab-btn" onclick="showTab('tab-set')">Parametry</div>
-    <div class="tab-btn" onclick="showTab('tab-sim')">Symulator</div>
+    <div class="tab-btn" onclick="showTab('tab-dev')">Urządzenie</div>
+    <div class="tab-btn" onclick="showTab('tab-rec')">Nagryw.</div>
   </div>
 
   <!-- Calibration tab -->
@@ -234,52 +303,121 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
     <button class="state-btn" style="margin-top:6px;width:100%;padding:8px" onclick="resetSettings()">Reset do kalibracji</button>
   </div>
 
-  <!-- Simulator tab -->
-  <div class="tab-panel" id="tab-sim">
+  <!-- Device tab -->
+  <div class="tab-panel" id="tab-dev">
     <div class="card">
-      <div class="card-head">Ręczne stany<span id="simStateLabel" style="font-size:10px;color:var(--acc);text-transform:none;letter-spacing:0">baseline</span></div>
-      <div class="state-btns" id="stateButtons">
-        <button class="state-btn active" onclick="setSimState('baseline')">Baseline</button>
-        <button class="state-btn" onclick="setSimState('eyes_closed')">Zamkn. oczy</button>
-        <button class="state-btn" onclick="setSimState('focus')">Skupienie</button>
-        <button class="state-btn" onclick="setSimState('stress')">Stres</button>
-        <button class="state-btn" onclick="setSimState('panic_spike')">Panika!</button>
-        <button class="state-btn" onclick="setSimState('flow')">Flow</button>
+      <div class="card-head">Urządzenie HALO<span id="devStatusBadge" style="font-size:10px;color:var(--red);text-transform:none;letter-spacing:0">Rozłączone</span></div>
+
+      <!-- Connection toggle -->
+      <div class="dev-toggle">
+        <span class="dev-label">Połączenie</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="devToggle" onchange="toggleDevice(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Device status -->
+      <div class="dev-status" id="devStatusPanel">
+        <div class="status-row"><span>Status</span><span class="status-val off" id="devConnStatus">ROZŁĄCZONE</span></div>
+        <div class="status-row"><span>Streaming</span><span class="status-val off" id="devStreamStatus">—</span></div>
+        <div class="status-row"><span>Nazwa</span><span class="status-val" id="devName">—</span></div>
+        <div class="status-row"><span>Backend</span><span class="status-val" id="devBackend">—</span></div>
       </div>
     </div>
+
+    <!-- Data source selector -->
     <div class="card">
-      <div class="card-head">Auto-scenariusze<span id="autoLabel" style="font-size:10px;color:var(--tx3);text-transform:none;letter-spacing:0">Nieaktywny</span></div>
-      <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">Automatyczne sekwencje stanów symulujące realne sesje grania</p>
-      <div class="state-btns" style="margin-bottom:10px">
-        <button class="state-btn" onclick="startScenario('gaming_session')">Sesja gry</button>
-        <button class="state-btn" onclick="startScenario('horror_game')">Horror</button>
-        <button class="state-btn" onclick="startScenario('meditation_trainer')">Medytacja</button>
-        <button class="state-btn" onclick="startScenario('crafting_focus')">Crafting</button>
-      </div>
-      <button class="state-btn" style="width:100%;padding:6px;border-color:var(--red);color:var(--red)" onclick="stopScenario()">Zatrzymaj scenariusz</button>
-      <!-- Auto progress display -->
-      <div id="autoProgress" style="display:none;margin-top:10px">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx2);margin-bottom:6px">
-          <span id="autoStepInfo">Krok 1/8</span>
-          <span id="autoTimeInfo">8s</span>
-        </div>
-        <div style="height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
-          <div id="autoProgressBar" style="height:100%;background:var(--acc);border-radius:2px;transition:width 0.3s;width:0%"></div>
-        </div>
-        <div id="autoTimeline" style="display:flex;gap:2px;margin-top:8px;height:20px"></div>
+      <div class="card-head">Źródło danych<span id="sourceLabel" style="font-size:10px;color:var(--acc);text-transform:none;letter-spacing:0">symulator</span></div>
+      <div class="source-btns">
+        <button class="source-btn" id="srcBtn-device" onclick="setSource('device')">Urządzenie</button>
+        <button class="source-btn active" id="srcBtn-simulator" onclick="setSource('simulator')">Symulator</button>
+        <button class="source-btn" id="srcBtn-off" onclick="setSource('off')">Wyłączone</button>
       </div>
     </div>
-    <div class="card">
-      <div class="card-head">Połączenie</div>
-      <div class="conn-info" id="connInfo">
-        WebSocket: ws://localhost:8420/api/v1/stream<br>
-        REST API: http://localhost:8420/api/v1/<br>
-        Scenariusze: GET /api/v1/debug/scenarios<br>
-        Push rate: 10 Hz
+
+    <!-- Simulator controls (only when source=simulator) -->
+    <div class="card" id="simCard">
+      <div class="card-head">Symulator<span id="simStateLabel" style="font-size:10px;color:var(--acc);text-transform:none;letter-spacing:0">baseline</span></div>
+      <div class="sim-section">
+        <div class="state-btns" id="stateButtons">
+          <button class="state-btn active" onclick="setSimState('baseline')">Baseline</button>
+          <button class="state-btn" onclick="setSimState('eyes_closed')">Zamkn. oczy</button>
+          <button class="state-btn" onclick="setSimState('focus')">Skupienie</button>
+          <button class="state-btn" onclick="setSimState('stress')">Stres</button>
+          <button class="state-btn" onclick="setSimState('panic_spike')">Panika!</button>
+          <button class="state-btn" onclick="setSimState('flow')">Flow</button>
+        </div>
+      </div>
+      <div class="sim-section">
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Auto-scenariusze</div>
+        <div class="state-btns" style="margin-bottom:8px">
+          <button class="state-btn" onclick="startScenario('gaming_session')">Sesja gry</button>
+          <button class="state-btn" onclick="startScenario('horror_game')">Horror</button>
+          <button class="state-btn" onclick="startScenario('meditation_trainer')">Medytacja</button>
+          <button class="state-btn" onclick="startScenario('crafting_focus')">Crafting</button>
+        </div>
+        <button class="state-btn" style="width:100%;padding:6px;border-color:var(--red);color:var(--red)" onclick="stopScenario()">Zatrzymaj scenariusz</button>
+        <div id="autoProgress" style="display:none;margin-top:10px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx2);margin-bottom:6px">
+            <span id="autoStepInfo">Krok 1/8</span>
+            <span id="autoTimeInfo">8s</span>
+          </div>
+          <div style="height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
+            <div id="autoProgressBar" style="height:100%;background:var(--acc);border-radius:2px;transition:width 0.3s;width:0%"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Recording tab -->
+  <div class="tab-panel" id="tab-rec">
+    <div class="card" id="recControls">
+      <div class="card-head">Nowe nagranie<span id="recStatus" style="font-size:10px;color:var(--tx3);text-transform:none;letter-spacing:0">Gotowe</span></div>
+      <div class="rec-field">
+        <label>Nazwa sesji</label>
+        <input type="text" id="recName" placeholder="np. Sesja medytacyjna" maxlength="100">
+      </div>
+      <div class="rec-field">
+        <label>Czas trwania</label>
+        <div class="rec-duration">
+          <input type="range" id="recDuration" min="1" max="20" step="1" value="5" oninput="document.getElementById('recDurVal').textContent=this.value+' min'">
+          <span class="val" id="recDurVal">5 min</span>
+        </div>
+      </div>
+      <div id="recTimerDisplay" style="display:none">
+        <div class="rec-timer" id="recTimerText">00:00</div>
+        <div class="rec-progress"><div class="rec-progress-bar" id="recProgressBar" style="width:0%"></div></div>
+        <div class="rec-info" id="recSampleCount">0 próbek</div>
+      </div>
+      <button class="rec-btn start" id="recBtn" onclick="toggleRecording()">Rozpocznij nagrywanie</button>
+      <div class="rec-field" style="margin-top:10px">
+        <label>Notatki (opcjonalne)</label>
+        <textarea id="recNotes" placeholder="Dodaj notatki do sesji..."></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">Historia nagrań<span style="font-size:10px;color:var(--tx3);text-transform:none;letter-spacing:0" id="recCount">0</span></div>
+      <div class="rec-list" id="recList">
+        <div style="font-size:11px;color:var(--tx3);text-align:center;padding:10px">Brak nagrań</div>
+      </div>
+      <button class="state-btn" style="margin-top:8px;width:100%;padding:6px" onclick="loadRecordings()">Odśwież listę</button>
+    </div>
+  </div>
+
 </div>
+
+<!-- Chart overlay for viewing recorded sessions -->
+<div class="chart-overlay" id="chartOverlay">
+  <div class="chart-header">
+    <div class="chart-title" id="chartTitle">Nagranie</div>
+    <button class="chart-close" onclick="closeChartOverlay()">Zamknij</button>
+  </div>
+  <div class="chart-notes" id="chartNotes" style="display:none"></div>
+  <div id="chartChannels"></div>
+</div>
+
 </div>
 
 <script>
@@ -317,17 +455,25 @@ function drawWave(ch, newSamples) {
   ctx.clearRect(0,0,w,h);
 
   if (hist.length < 2) return;
+
+  // Auto-scale: find min/max in visible window
+  let minV = Infinity, maxV = -Infinity;
+  for (let i = 0; i < hist.length; i++) {
+    if (hist[i] < minV) minV = hist[i];
+    if (hist[i] > maxV) maxV = hist[i];
+  }
+  const range = maxV - minV || 1;
+  const pad = 8;
+
   const color = ch.startsWith('F') ? '#00e5a0' : '#3d9eff';
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.5;
   ctx.globalAlpha = 0.85;
   ctx.beginPath();
   const step = w / 300;
-  const mid = h / 2;
-  const scale = h / 160;
   for (let i = 0; i < hist.length; i++) {
     const x = i * step;
-    const y = mid - hist[i] * scale;
+    const y = pad + ((maxV - hist[i]) / range) * (h - pad * 2);
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
   ctx.stroke();
@@ -431,7 +577,144 @@ function connect() {
     updateMetrics(frame.metrics);
     updateCombos(frame.active_combos, frame.combo_timers);
     updateSimulatorDisplay(frame.simulator);
+    updateRecordingFromFrame(frame.recording);
+    updateDeviceStatus(frame);
+    updateSourceDisplay(frame.source);
   };
+}
+
+// ─── Device management ────────────────────────────────────────────
+let deviceConnecting = false;
+
+async function toggleDevice(on) {
+  if (deviceConnecting) return;
+  deviceConnecting = true;
+  const toggle = document.getElementById('devToggle');
+
+  try {
+    if (on) {
+      // Scan → Connect → Start stream
+      document.getElementById('devStatusBadge').textContent = 'Skanowanie...';
+      document.getElementById('devStatusBadge').style.color = 'var(--amber)';
+      const scanRes = await fetch('/api/v1/device/scan', {method:'POST'});
+      const scanData = await scanRes.json();
+      const devices = scanData.devices || [];
+      const halo = devices.find(d => (d.name || '').includes('HALO'));
+      if (!halo) {
+        alert('Nie znaleziono urządzenia HALO. Upewnij się, że jest włączone.');
+        toggle.checked = false;
+        document.getElementById('devStatusBadge').textContent = 'Rozłączone';
+        document.getElementById('devStatusBadge').style.color = 'var(--red)';
+        return;
+      }
+      document.getElementById('devStatusBadge').textContent = 'Łączenie...';
+      const connRes = await fetch('/api/v1/device/connect', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({device_name: halo.name})});
+      if (!connRes.ok) { throw new Error('Connection failed'); }
+
+      document.getElementById('devStatusBadge').textContent = 'Stream...';
+      await fetch('/api/v1/device/start-stream', {method:'POST'});
+
+      document.getElementById('devStatusBadge').textContent = 'Połączone';
+      document.getElementById('devStatusBadge').style.color = 'var(--acc)';
+
+      // Switch source to device
+      setSource('device');
+    } else {
+      // Stop stream → Disconnect
+      await fetch('/api/v1/device/stop-stream', {method:'POST'});
+      await fetch('/api/v1/device/disconnect', {method:'POST'});
+      document.getElementById('devStatusBadge').textContent = 'Rozłączone';
+      document.getElementById('devStatusBadge').style.color = 'var(--red)';
+    }
+  } catch (e) {
+    console.error('Device toggle error:', e);
+    toggle.checked = false;
+    document.getElementById('devStatusBadge').textContent = 'Błąd';
+    document.getElementById('devStatusBadge').style.color = 'var(--red)';
+    alert('Błąd połączenia: ' + e.message);
+  } finally {
+    deviceConnecting = false;
+  }
+}
+
+function updateDeviceStatus(frame) {
+  const dev = frame.device;
+  if (!dev) return;
+
+  const isConn = dev.connected;
+  const isStream = dev.streaming;
+
+  // Badge
+  const badge = document.getElementById('devStatusBadge');
+  if (isStream) {
+    badge.textContent = 'Streaming';
+    badge.style.color = 'var(--acc)';
+  } else if (isConn) {
+    badge.textContent = 'Połączone';
+    badge.style.color = 'var(--acc)';
+  } else {
+    badge.textContent = 'Rozłączone';
+    badge.style.color = 'var(--red)';
+  }
+
+  // Toggle sync
+  const toggle = document.getElementById('devToggle');
+  if (!deviceConnecting) toggle.checked = isConn;
+
+  // Status rows
+  const connEl = document.getElementById('devConnStatus');
+  connEl.textContent = isConn ? 'POŁĄCZONE' : 'ROZŁĄCZONE';
+  connEl.className = 'status-val ' + (isConn ? 'on' : 'off');
+
+  const streamEl = document.getElementById('devStreamStatus');
+  streamEl.textContent = isStream ? 'AKTYWNY' : '—';
+  streamEl.className = 'status-val ' + (isStream ? 'on' : 'off');
+
+  document.getElementById('devName').textContent = dev.name || '—';
+  document.getElementById('devBackend').textContent = dev.backend || (dev.address ? 'BLE' : '—');
+
+  // Topbar source info
+  const src = frame.source;
+  const statusText = document.getElementById('statusText');
+  if (src === 'device' && isStream) {
+    statusText.textContent = 'Urządzenie: ' + (dev.name || 'HALO');
+    document.getElementById('statusDot').style.background = 'var(--acc)';
+  } else if (src === 'simulator') {
+    statusText.textContent = 'Symulator';
+    document.getElementById('statusDot').style.background = 'var(--amber)';
+  } else if (src === 'off') {
+    statusText.textContent = 'Wyłączone';
+    document.getElementById('statusDot').style.background = 'var(--tx3)';
+  }
+}
+
+function updateSourceDisplay(source) {
+  if (!source) return;
+  ['device','simulator','off'].forEach(s => {
+    const btn = document.getElementById('srcBtn-' + s);
+    if (!btn) return;
+    btn.className = 'source-btn' + (s === source ? (s === 'off' ? ' off-active' : ' active') : '');
+  });
+  document.getElementById('sourceLabel').textContent = source === 'device' ? 'urządzenie' : source === 'off' ? 'wyłączone' : 'symulator';
+  document.getElementById('sourceLabel').style.color = source === 'device' ? 'var(--acc)' : source === 'off' ? 'var(--red)' : 'var(--amber)';
+
+  // Show/hide simulator card
+  const simCard = document.getElementById('simCard');
+  if (simCard) simCard.style.display = source === 'simulator' ? 'block' : 'none';
+}
+
+async function setSource(src) {
+  if (src === 'device') {
+    // Check if device is connected
+    const res = await fetch('/api/v1/device/status');
+    const data = await res.json();
+    if (!data.device || !data.device.streaming) {
+      alert('Najpierw połącz urządzenie (przełącznik ON/OFF powyżej)');
+      return;
+    }
+  }
+  await fetch('/api/v1/source/' + src, {method:'POST'});
+  updateSourceDisplay(src);
 }
 
 // ─── Simulator state ──────────────────────────────────────────────
@@ -639,11 +922,307 @@ function showTab(id) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   event.target.classList.add('active');
+  if (id === 'tab-rec') loadRecordings();
+}
+
+// ─── Recording ────────────────────────────────────────────────────
+let isRecording = false;
+let recStartTime = null;
+let recDurationSec = 300;
+let recTimerInterval = null;
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = Math.floor(sec % 60).toString().padStart(2, '0');
+  return m + ':' + s;
+}
+
+async function toggleRecording() {
+  if (!isRecording) {
+    // Start recording
+    const name = document.getElementById('recName').value.trim() || 'Sesja ' + new Date().toLocaleString('pl');
+    const durMin = parseInt(document.getElementById('recDuration').value) || 5;
+    recDurationSec = durMin * 60;
+
+    const res = await fetch('/api/v1/recording/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, duration_sec: recDurationSec})
+    });
+    if (!res.ok) { alert('Nie udało się rozpocząć nagrywania'); return; }
+
+    isRecording = true;
+    recStartTime = Date.now();
+    document.getElementById('recBtn').textContent = 'Zatrzymaj nagrywanie';
+    document.getElementById('recBtn').className = 'rec-btn stop';
+    document.getElementById('recStatus').textContent = 'Nagrywanie...';
+    document.getElementById('recStatus').style.color = 'var(--red)';
+    document.getElementById('recTimerDisplay').style.display = 'block';
+    document.getElementById('recName').disabled = true;
+    document.getElementById('recDuration').disabled = true;
+    document.getElementById('recIndicator').classList.add('active');
+
+    // Save notes now (in case user already typed them)
+    saveNotes();
+
+    // Start timer
+    recTimerInterval = setInterval(updateRecTimer, 500);
+  } else {
+    // Stop recording
+    await fetch('/api/v1/recording/stop', {method: 'POST'});
+    // Save notes
+    await saveNotes();
+    stopRecordingUI();
+    loadRecordings();
+  }
+}
+
+function updateRecTimer() {
+  const elapsed = (Date.now() - recStartTime) / 1000;
+  const remaining = Math.max(0, recDurationSec - elapsed);
+  const pct = Math.min(100, (elapsed / recDurationSec) * 100);
+
+  document.getElementById('recTimerText').textContent = formatTime(elapsed);
+  document.getElementById('recProgressBar').style.width = pct + '%';
+  document.getElementById('recTimerTop').textContent = 'REC ' + formatTime(elapsed);
+
+  if (remaining <= 0) {
+    stopRecordingUI();
+    loadRecordings();
+  }
+}
+
+function updateRecordingFromFrame(recInfo) {
+  if (recInfo && recInfo.recording) {
+    if (!isRecording) {
+      // Server is recording but UI doesn't know yet
+      isRecording = true;
+      recStartTime = Date.now() - ((recInfo.elapsed_sec || 0) * 1000);
+      recDurationSec = recInfo.duration_sec || 300;
+      document.getElementById('recBtn').textContent = 'Zatrzymaj nagrywanie';
+      document.getElementById('recBtn').className = 'rec-btn stop';
+      document.getElementById('recTimerDisplay').style.display = 'block';
+      document.getElementById('recIndicator').classList.add('active');
+      if (!recTimerInterval) recTimerInterval = setInterval(updateRecTimer, 500);
+    }
+    document.getElementById('recSampleCount').textContent = (recInfo.sample_count || 0) + ' próbek';
+  } else if (isRecording) {
+    // Server stopped recording
+    stopRecordingUI();
+  }
+}
+
+function stopRecordingUI() {
+  isRecording = false;
+  clearInterval(recTimerInterval);
+  recTimerInterval = null;
+  document.getElementById('recBtn').textContent = 'Rozpocznij nagrywanie';
+  document.getElementById('recBtn').className = 'rec-btn start';
+  document.getElementById('recStatus').textContent = 'Gotowe';
+  document.getElementById('recStatus').style.color = 'var(--tx3)';
+  document.getElementById('recTimerDisplay').style.display = 'none';
+  document.getElementById('recName').disabled = false;
+  document.getElementById('recDuration').disabled = false;
+  document.getElementById('recName').value = '';
+  document.getElementById('recIndicator').classList.remove('active');
+}
+
+async function saveNotes() {
+  const notes = document.getElementById('recNotes').value.trim();
+  if (notes) {
+    await fetch('/api/v1/recording/notes', {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({notes})
+    });
+  }
+}
+
+async function loadRecordings() {
+  const res = await fetch('/api/v1/recordings');
+  const data = await res.json();
+  const list = document.getElementById('recList');
+  const recs = data.recordings || [];
+  document.getElementById('recCount').textContent = recs.length;
+
+  if (recs.length === 0) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--tx3);text-align:center;padding:10px">Brak nagrań</div>';
+    return;
+  }
+
+  list.innerHTML = recs.map(r => {
+    const date = new Date((r.start_time || 0) * 1000).toLocaleString('pl');
+    const dur = r.actual_duration_sec ? formatTime(r.actual_duration_sec) : '--:--';
+    const samples = r.sample_count || 0;
+    return `<div class="rec-item" onclick="viewRecording('${r.session_id}')">
+      <div class="rec-item-info">
+        <div class="rec-item-name">${escapeHtml(r.name || r.session_id)}</div>
+        <div class="rec-item-meta">${date} · ${dur} · ${samples} próbek</div>
+      </div>
+      <div class="rec-item-actions">
+        <button onclick="event.stopPropagation();downloadCsv('${r.session_id}')">CSV</button>
+        <button class="del" onclick="event.stopPropagation();deleteRecording('${r.session_id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function downloadCsv(sessionId) {
+  window.open('/api/v1/recordings/' + sessionId + '/csv', '_blank');
+}
+
+async function deleteRecording(sessionId) {
+  if (!confirm('Usunąć nagranie?')) return;
+  await fetch('/api/v1/recordings/' + sessionId, {method: 'DELETE'});
+  loadRecordings();
+}
+
+async function viewRecording(sessionId) {
+  const res = await fetch('/api/v1/recordings/' + sessionId);
+  if (!res.ok) { alert('Nie znaleziono nagrania'); return; }
+  const data = await res.json();
+
+  document.getElementById('chartTitle').textContent = data.name || sessionId;
+  const notesEl = document.getElementById('chartNotes');
+  if (data.notes) {
+    notesEl.textContent = data.notes;
+    notesEl.style.display = 'block';
+  } else {
+    notesEl.style.display = 'none';
+  }
+
+  const container = document.getElementById('chartChannels');
+  container.innerHTML = '';
+
+  const samples = data.samples || {};
+  const timestamps = samples.ts || [];
+
+  // Show overlay FIRST so canvases get a real layout width
+  document.getElementById('chartOverlay').classList.add('active');
+
+  // Add session info summary
+  const infoHtml = `<div style="display:flex;gap:16px;font-size:12px;color:var(--tx2);margin-bottom:16px;flex-wrap:wrap">
+    <span>Czas: ${data.actual_duration_sec ? formatTime(data.actual_duration_sec) : '--:--'}</span>
+    <span>Próbki: ${data.sample_count || 0}</span>
+    <span>Kanały: ${(data.channels || []).join(', ')}</span>
+    <span>Źródło: ${data.source || '?'}</span>
+    <span>Częst.: ${data.sample_rate || 250} Hz</span>
+  </div>`;
+  container.innerHTML = infoHtml;
+
+  // Use requestAnimationFrame to ensure layout is computed
+  requestAnimationFrame(() => {
+    const dpr = window.devicePixelRatio || 2;
+    ['Fp1', 'Fp2', 'O1', 'O2'].forEach(ch => {
+      const values = samples[ch] || [];
+      if (values.length === 0) return;
+
+      const div = document.createElement('div');
+      div.className = 'chart-channel';
+      div.innerHTML = `<div class="ch-label">${ch} (${values.length} próbek)</div><canvas></canvas>`;
+      container.appendChild(div);
+
+      const canvas = div.querySelector('canvas');
+      const displayW = canvas.offsetWidth || 800;
+      const displayH = canvas.offsetHeight || 120;
+      canvas.width = displayW * dpr;
+      canvas.height = displayH * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // Draw in CSS pixel coordinates
+      const w = displayW, h = displayH;
+      const minV = Math.min(...values);
+      const maxV = Math.max(...values);
+      const range = maxV - minV || 1;
+      const color = ch.startsWith('F') ? '#00e5a0' : '#3d9eff';
+
+      // Background fill
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(0, 0, w, h);
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = (i / 4) * h;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      // Build path points
+      const pad = 8;
+      const points = [];
+      for (let i = 0; i < values.length; i++) {
+        const x = (i / (values.length - 1)) * w;
+        const y = h - pad - ((values[i] - minV) / range) * (h - pad * 2);
+        points.push({x, y});
+      }
+
+      // Filled area under curve
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, h);
+      points.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.lineTo(points[points.length - 1].x, h);
+      ctx.closePath();
+      ctx.fillStyle = color.replace(')', ',0.08)').replace('rgb', 'rgba').replace('#', '');
+      // Hex to rgba fill
+      const r = parseInt(color.slice(1,3),16), g = parseInt(color.slice(3,5),16), b = parseInt(color.slice(5,7),16);
+      ctx.fillStyle = `rgba(${r},${g},${b},0.1)`;
+      ctx.fill();
+
+      // Signal line with glow
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Y-axis labels
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '10px JetBrains Mono';
+      ctx.fillText(maxV.toFixed(1), 4, 12);
+      ctx.fillText(minV.toFixed(1), 4, h - 4);
+
+      // Duration label
+      if (timestamps.length >= 2) {
+        const durSec = (timestamps[timestamps.length - 1] - timestamps[0]).toFixed(1);
+        ctx.fillText(durSec + 's', w - 50, h - 4);
+      }
+    });
+  });
+}
+
+function closeChartOverlay() {
+  document.getElementById('chartOverlay').classList.remove('active');
 }
 
 // ─── Init ─────────────────────────────────────────────────────────
 connect();
 loadSettings();
+
+// Fetch initial device status
+fetch('/api/v1/device/status').then(r => r.json()).then(data => {
+  const dev = data.device;
+  const isConn = dev && dev.streaming !== undefined;
+  document.getElementById('devToggle').checked = isConn && dev.streaming;
+  document.getElementById('devBackend').textContent = data.backend || '—';
+  updateSourceDisplay(data.source || 'simulator');
+  if (isConn) {
+    document.getElementById('devConnStatus').textContent = 'POŁĄCZONE';
+    document.getElementById('devConnStatus').className = 'status-val on';
+    document.getElementById('devName').textContent = dev.name || '—';
+  }
+}).catch(() => {});
 
 // handle canvas resize
 window.addEventListener('resize', () => {

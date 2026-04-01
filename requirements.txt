@@ -3,3 +3,8 @@ uvicorn[standard]==0.30.0
 websockets==12.0
 scipy>=1.14.0
 numpy>=1.26.4
+bleak>=0.21.0
+# BrainAccess SDK — optional, only available on Windows/Linux with BLE support.
+# The server falls back to the built-in BLE adapter (bleak) on macOS.
+# Install manually on Win/Linux: pip install brainaccess
+# brainaccess>=3.6.1

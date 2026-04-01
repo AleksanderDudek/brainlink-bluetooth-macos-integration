@@ -1,0 +1,37 @@
+# ─── Python ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ─── Virtual environments ────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ─── IDE / editor ────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── Project-specific ────────────────────────────────────────────────
+# Recorded EEG sessions (potentially large / personal data)
+recordings/*.csv
+recordings/*.json
+
+# Calibration profiles saved locally
+*.calibration.json
+
+# Log files
+*.log
+logs/
