@@ -64,6 +64,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
 .wave-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .wave-card{background:var(--bg);border-radius:var(--radius);padding:8px;position:relative}
 .wave-card .ch-name{position:absolute;top:6px;left:10px;font-size:10px;color:var(--tx3);font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.wave-card .ch-val{position:absolute;top:5px;right:10px;font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--tx);letter-spacing:0.3px}
+.wave-card .ch-stats{position:absolute;bottom:4px;left:10px;right:10px;display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);font-variant-numeric:tabular-nums}
 .wave-card canvas{width:100%;height:80px;display:block}
 
 /* Band powers */
@@ -220,6 +222,36 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
 .event-entry .ev-icon{flex-shrink:0;width:18px;text-align:center}
 .event-entry .ev-text{color:var(--tx2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .event-entry .ev-dur{color:var(--tx3);font-variant-numeric:tabular-nums;flex-shrink:0}
+
+/* ── Combo Kreator ─────────────────────────────────────────────────── */
+.kit-section-label{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.kit-rec-select{width:100%;background:var(--bg);color:var(--tx);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:6px 8px;font-family:var(--font);font-size:11px;outline:none;cursor:pointer}
+.kit-rec-select:focus{border-color:var(--acc)}
+.kit-seg-row{display:flex;gap:6px;align-items:center;margin-top:8px}
+.kit-seg-row label{flex:1;font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:4px}
+.kit-seg-row input[type=number]{width:58px;background:var(--bg);color:var(--tx);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:4px 6px;font-family:var(--font);font-size:11px;text-align:center;outline:none}
+.kit-seg-row input[type=number]:focus{border-color:var(--acc)}
+.kit-timeline{width:100%;height:72px;display:block;background:var(--bg);border-radius:var(--radius);margin:8px 0 4px;cursor:default}
+.kit-cond-row{display:flex;align-items:center;gap:5px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);transition:opacity .2s}
+.kit-cond-name{font-size:11px;font-weight:500;width:68px;flex-shrink:0;letter-spacing:0.3px}
+.kit-cond-mean{font-size:10px;color:var(--tx3);width:30px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0}
+.kit-op-sel{background:var(--bg4);color:var(--tx);border:1px solid rgba(255,255,255,0.08);border-radius:3px;padding:3px 2px;font-family:var(--font);font-size:11px;width:28px;flex-shrink:0;text-align:center}
+.kit-thresh{flex:1;accent-color:var(--acc);cursor:pointer}
+.kit-val{font-size:11px;color:var(--acc);width:30px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0}
+.kit-name-row{display:flex;gap:6px;margin-top:10px}
+.kit-name-row input{flex:1;background:var(--bg);color:var(--tx);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:5px 8px;font-family:var(--font);font-size:12px;outline:none}
+.kit-name-row input:focus{border-color:var(--acc)}
+.kit-timing-row{display:flex;gap:6px;margin-top:6px}
+.kit-timing-row label{flex:1;font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;display:flex;flex-direction:column;gap:3px}
+.kit-timing-row input{background:var(--bg);color:var(--tx);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:4px 6px;font-family:var(--font);font-size:11px;text-align:center;width:100%;outline:none}
+.kit-combo-item{background:var(--bg);border-radius:var(--radius);padding:8px 10px;margin-bottom:4px;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:2px 8px}
+.kit-combo-name{font-size:12px;font-weight:500;color:var(--acc)}
+.kit-combo-del{grid-row:1/3;align-self:center;background:none;border:1px solid rgba(255,77,90,.3);color:var(--red);border-radius:3px;padding:3px 8px;font-size:10px;cursor:pointer;flex-shrink:0}
+.kit-combo-del:hover{background:rgba(255,77,90,.1)}
+.kit-combo-reqs{font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kit-combo-meta{font-size:10px;color:var(--tx3)}
+.kit-badge-custom{font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(160,112,255,.15);color:var(--purple);margin-left:6px;text-transform:uppercase;letter-spacing:0.5px;vertical-align:middle}
+.kit-error{font-size:11px;color:var(--red);padding:6px 8px;background:rgba(255,77,90,.08);border-radius:var(--radius);margin-top:6px}
 </style>
 </head>
 <body>
@@ -286,10 +318,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
   <div class="card">
     <div class="card-head">Surowe sygnały EEG</div>
     <div class="wave-grid">
-      <div class="wave-card"><span class="ch-name">Fp1</span><canvas id="wave-Fp1"></canvas></div>
-      <div class="wave-card"><span class="ch-name">Fp2</span><canvas id="wave-Fp2"></canvas></div>
-      <div class="wave-card"><span class="ch-name">O1</span><canvas id="wave-O1"></canvas></div>
-      <div class="wave-card"><span class="ch-name">O2</span><canvas id="wave-O2"></canvas></div>
+      <div class="wave-card"><span class="ch-name">Fp1</span><span class="ch-val" id="chval-Fp1">—</span><canvas id="wave-Fp1"></canvas><div class="ch-stats"><span id="chmin-Fp1">min —</span><span id="chavg-Fp1">avg —</span><span id="chmax-Fp1">max —</span></div></div>
+      <div class="wave-card"><span class="ch-name">Fp2</span><span class="ch-val" id="chval-Fp2">—</span><canvas id="wave-Fp2"></canvas><div class="ch-stats"><span id="chmin-Fp2">min —</span><span id="chavg-Fp2">avg —</span><span id="chmax-Fp2">max —</span></div></div>
+      <div class="wave-card"><span class="ch-name">O1</span><span class="ch-val" id="chval-O1">—</span><canvas id="wave-O1"></canvas><div class="ch-stats"><span id="chmin-O1">min —</span><span id="chavg-O1">avg —</span><span id="chmax-O1">max —</span></div></div>
+      <div class="wave-card"><span class="ch-name">O2</span><span class="ch-val" id="chval-O2">—</span><canvas id="wave-O2"></canvas><div class="ch-stats"><span id="chmin-O2">min —</span><span id="chavg-O2">avg —</span><span id="chmax-O2">max —</span></div></div>
     </div>
   </div>
 
@@ -318,6 +350,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
     <div class="tab-btn" onclick="showTab('tab-set')">Parametry</div>
     <div class="tab-btn" onclick="showTab('tab-dev')">Urządzenie</div>
     <div class="tab-btn" onclick="showTab('tab-rec')">Nagryw.</div>
+  </div>
+  <div class="tab-row" style="margin-top:-5px">
+    <div class="tab-btn" onclick="showTab('tab-kit');kitInit()">⚡ Kreator Combo</div>
   </div>
 
   <!-- Calibration tab -->
@@ -459,6 +494,59 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
     </div>
   </div>
 
+  <!-- Kreator Combo tab -->
+  <div class="tab-panel" id="tab-kit">
+
+    <!-- Builder card -->
+    <div class="card">
+      <div class="card-head">Kreator Combo</div>
+
+      <!-- Step 1: pick recording -->
+      <div class="kit-section-label">1. Wybierz nagranie</div>
+      <select class="kit-rec-select" id="kitRecSelect" onchange="kitSelectRec()">
+        <option value="">— brak nagrań —</option>
+      </select>
+
+      <!-- Step 2: set time window -->
+      <div id="kitSegmentPanel" style="display:none">
+        <div class="kit-section-label">2. Wybierz fragment sesji</div>
+        <div class="kit-seg-row">
+          <label>Od <input type="number" id="kitSegStart" min="0" step="1" value="0"> s</label>
+          <label>Do <input type="number" id="kitSegEnd" min="2" step="1" value="30"> s</label>
+        </div>
+        <div id="kitRecInfo" style="font-size:10px;color:var(--tx3);margin-top:4px"></div>
+        <button class="state-btn" id="kitAnalyzeBtn" style="margin-top:8px;width:100%;padding:7px" onclick="kitAnalyze()">Analizuj fragment →</button>
+        <div id="kitError" style="display:none" class="kit-error"></div>
+      </div>
+
+      <!-- Step 3: conditions from analysis -->
+      <div id="kitAnalysisPanel" style="display:none">
+        <canvas class="kit-timeline" id="kitTimelineCanvas"></canvas>
+        <div class="kit-section-label">3. Skonfiguruj warunki</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">Zaznaczone metryki zostaną wymagane do aktywacji combo.</div>
+        <div id="kitConditions"></div>
+
+        <!-- Step 4: name + save -->
+        <div class="kit-section-label">4. Nazwij i zapisz</div>
+        <div class="kit-name-row">
+          <input id="kitComboName" placeholder="nazwa_combo (a-z, 0-9, _)" maxlength="32">
+        </div>
+        <div class="kit-timing-row">
+          <label>Sustain (s)<input type="number" id="kitSustain" min="0.5" max="10" step="0.5" value="2.0"></label>
+          <label>Cooldown (s)<input type="number" id="kitCooldown" min="1" max="60" step="1" value="8.0"></label>
+        </div>
+        <button class="state-btn" style="margin-top:10px;width:100%;padding:8px;border-color:var(--acc);color:var(--acc)" onclick="kitSaveCombo()">💾 Zapisz combo</button>
+      </div>
+    </div>
+
+    <!-- Saved custom combos -->
+    <div class="card">
+      <div class="card-head">Własne combo<span id="kitCustomCount" style="font-size:10px;color:var(--tx3);text-transform:none;letter-spacing:0">0</span></div>
+      <div id="kitComboList"><div style="font-size:11px;color:var(--tx3);text-align:center;padding:8px">Brak własnych combo</div></div>
+    </div>
+
+  </div>
+
 </div>
 
 <!-- Chart overlay for viewing recorded sessions -->
@@ -478,6 +566,7 @@ const CHANNELS = ['Fp1','Fp2','O1','O2'];
 const BANDS = ['delta','theta','alpha','beta','gamma'];
 const METRICS = ['focus','calm','valence','instability','stress','flow'];
 const METRIC_NAMES = {focus:'Skupienie',calm:'Spokój',valence:'Waleczność',instability:'Niestabil.',stress:'Stres',flow:'Flow'};
+const METRIC_COLORS = {focus:'#00e5a0',calm:'#3d9eff',valence:'#a070ff',instability:'#ffb020',stress:'#ff4d5a',flow:'#ff5ca0'};
 const COMBO_NAMES = ['super_flow','panic','zen_heal','berserker'];
 
 let ws = null;
@@ -501,6 +590,19 @@ function drawWave(ch, newSamples) {
   const hist = waveHistories[ch];
   hist.push(...newSamples);
   if (hist.length > 300) hist.splice(0, hist.length - 300);
+
+  // Update numerical values
+  if (newSamples.length > 0) {
+    const last = newSamples[newSamples.length - 1];
+    document.getElementById('chval-'+ch).textContent = last.toFixed(2) + ' µV';
+  }
+  if (hist.length > 1) {
+    let mn = Infinity, mx = -Infinity, sum = 0;
+    for (let i = 0; i < hist.length; i++) { mn = Math.min(mn, hist[i]); mx = Math.max(mx, hist[i]); sum += hist[i]; }
+    document.getElementById('chmin-'+ch).textContent = 'min ' + mn.toFixed(1);
+    document.getElementById('chavg-'+ch).textContent = 'avg ' + (sum/hist.length).toFixed(1);
+    document.getElementById('chmax-'+ch).textContent = 'max ' + mx.toFixed(1);
+  }
 
   const ctx = waveCtxs[ch];
   const w = waveCanvases[ch].width;
@@ -1088,6 +1190,7 @@ function showTab(id) {
   document.getElementById(id).classList.add('active');
   event.target.classList.add('active');
   if (id === 'tab-rec') loadRecordings();
+  if (id === 'tab-kit') kitInit();
 }
 
 // ─── Recording ────────────────────────────────────────────────────
@@ -1371,9 +1474,274 @@ function closeChartOverlay() {
   document.getElementById('chartOverlay').classList.remove('active');
 }
 
+// ─── Combo Kreator ────────────────────────────────────────────────
+let kitRecordings = [];
+let kitCurrentRec = null;
+let kitAnalysis = null;
+let kitConditions = {};
+
+async function kitInit() {
+  try {
+    const res = await fetch('/api/v1/recordings');
+    const data = await res.json();
+    kitRecordings = data.recordings || [];
+    const sel = document.getElementById('kitRecSelect');
+    sel.innerHTML = '<option value="">— wybierz nagranie —</option>' +
+      kitRecordings.map(r => {
+        const dur = r.actual_duration_sec ? ` (${formatTime(r.actual_duration_sec)})` : '';
+        return `<option value="${r.session_id}">${escapeHtml(r.name || r.session_id)}${dur}</option>`;
+      }).join('');
+  } catch(e) {
+    console.error('kitInit error', e);
+  }
+  kitLoadCustomCombos();
+}
+
+function kitSelectRec() {
+  const id = document.getElementById('kitRecSelect').value;
+  if (!id) {
+    document.getElementById('kitSegmentPanel').style.display = 'none';
+    document.getElementById('kitAnalysisPanel').style.display = 'none';
+    kitCurrentRec = null;
+    return;
+  }
+  kitCurrentRec = kitRecordings.find(r => r.session_id === id) || null;
+  const dur = Math.floor(kitCurrentRec?.actual_duration_sec || 60);
+  const endInput = document.getElementById('kitSegEnd');
+  endInput.value = Math.min(30, dur);
+  endInput.max = dur;
+  document.getElementById('kitSegStart').max = dur;
+  document.getElementById('kitRecInfo').textContent =
+    `Czas trwania: ${formatTime(dur)} · ${kitCurrentRec?.sample_count || '?'} próbek`;
+  document.getElementById('kitSegmentPanel').style.display = 'block';
+  document.getElementById('kitAnalysisPanel').style.display = 'none';
+  document.getElementById('kitError').style.display = 'none';
+}
+
+async function kitAnalyze() {
+  const id = document.getElementById('kitRecSelect').value;
+  if (!id) return;
+  const start = parseFloat(document.getElementById('kitSegStart').value) || 0;
+  const end = parseFloat(document.getElementById('kitSegEnd').value) || -1;
+  if (end > 0 && end - start < 2) {
+    kitShowError('Fragment musi być dłuższy niż 2 sekundy.');
+    return;
+  }
+  const btn = document.getElementById('kitAnalyzeBtn');
+  btn.textContent = 'Analizuję…';
+  btn.disabled = true;
+  document.getElementById('kitError').style.display = 'none';
+  try {
+    const res = await fetch(`/api/v1/recordings/${id}/segment-analysis?start_sec=${start}&end_sec=${end}`);
+    if (!res.ok) {
+      const err = await res.json();
+      kitShowError(err.detail || 'Błąd analizy');
+      return;
+    }
+    kitAnalysis = await res.json();
+    kitConditions = {};
+    METRICS.forEach(m => {
+      const sugg = kitAnalysis.suggestions[m];
+      if (sugg) {
+        kitConditions[m] = { op: sugg[0], val: parseFloat(sugg.slice(1)), enabled: true };
+      } else {
+        const mean = kitAnalysis.stats[m]?.mean ?? 0.5;
+        kitConditions[m] = { op: '>', val: parseFloat(mean.toFixed(2)), enabled: false };
+      }
+    });
+    kitRenderAnalysis();
+    document.getElementById('kitAnalysisPanel').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('kitTimelineCanvas').width = 0; // force resize
+      kitDrawTimeline();
+    }, 50);
+  } catch(e) {
+    kitShowError('Błąd: ' + e.message);
+  } finally {
+    btn.textContent = 'Analizuj fragment →';
+    btn.disabled = false;
+  }
+}
+
+function kitShowError(msg) {
+  const el = document.getElementById('kitError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function kitRenderAnalysis() {
+  if (!kitAnalysis) return;
+  const div = document.getElementById('kitConditions');
+  div.innerHTML = METRICS.map(m => {
+    const stat = kitAnalysis.stats[m] || {};
+    const cond = kitConditions[m];
+    const color = METRIC_COLORS[m] || 'var(--acc)';
+    const pct = Math.round((stat.mean || 0) * 100);
+    return `<div class="kit-cond-row" id="kitcrow-${m}" style="opacity:${cond.enabled ? '1' : '0.4'}">
+      <input type="checkbox" ${cond.enabled ? 'checked' : ''} onchange="kitToggleCond('${m}',this.checked)" style="accent-color:${color};flex-shrink:0;cursor:pointer">
+      <span class="kit-cond-name" style="color:${color}">${METRIC_NAMES[m]}</span>
+      <span class="kit-cond-mean">${pct}%</span>
+      <select class="kit-op-sel" id="kitop-${m}" onchange="kitUpdateCond('${m}')">
+        <option value=">" ${cond.op === '>' ? 'selected' : ''}>&gt;</option>
+        <option value="<" ${cond.op === '<' ? 'selected' : ''}>&lt;</option>
+      </select>
+      <input type="range" class="kit-thresh" id="kitthresh-${m}" min="0" max="1" step="0.05"
+        value="${cond.val}" oninput="kitUpdateCond('${m}')">
+      <span class="kit-val" id="kitval-${m}">${cond.val.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+}
+
+function kitToggleCond(m, enabled) {
+  kitConditions[m].enabled = enabled;
+  const row = document.getElementById('kitcrow-' + m);
+  if (row) row.style.opacity = enabled ? '1' : '0.4';
+  kitDrawTimeline();
+}
+
+function kitUpdateCond(m) {
+  kitConditions[m].op = document.getElementById('kitop-' + m).value;
+  const raw = parseFloat(document.getElementById('kitthresh-' + m).value);
+  kitConditions[m].val = raw;
+  document.getElementById('kitval-' + m).textContent = raw.toFixed(2);
+}
+
+function kitDrawTimeline() {
+  if (!kitAnalysis?.series) return;
+  const canvas = document.getElementById('kitTimelineCanvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth || 260;
+  const h = 72;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#0a0b0d';
+  ctx.fillRect(0, 0, w, h);
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) {
+    const y = (i / 4) * h;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  METRICS.forEach(m => {
+    const vals = kitAnalysis.series[m];
+    if (!vals || vals.length < 2) return;
+    const enabled = kitConditions[m]?.enabled;
+    ctx.globalAlpha = enabled ? 0.9 : 0.18;
+    ctx.strokeStyle = METRIC_COLORS[m] || '#fff';
+    ctx.lineWidth = enabled ? 1.5 : 1;
+    ctx.beginPath();
+    vals.forEach((v, i) => {
+      const x = (i / (vals.length - 1)) * w;
+      const y = h - 4 - v * (h - 8);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+  // Legend
+  let lx = 4;
+  METRICS.forEach(m => {
+    if (!kitConditions[m]?.enabled) return;
+    ctx.fillStyle = METRIC_COLORS[m];
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillText(METRIC_NAMES[m], lx, h - 3);
+    lx += ctx.measureText(METRIC_NAMES[m]).width + 8;
+  });
+}
+
+async function kitSaveCombo() {
+  const rawName = document.getElementById('kitComboName').value.trim();
+  if (!rawName) { alert('Podaj nazwę combo'); return; }
+  if (!/^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(rawName)) {
+    alert('Nazwa combo musi zaczynać się od litery i zawierać tylko a-z, 0-9, _ (max 32 znaki).');
+    return;
+  }
+  const requires = {};
+  METRICS.forEach(m => {
+    const cond = kitConditions[m];
+    if (cond?.enabled) requires[m] = cond.op + cond.val.toFixed(2);
+  });
+  if (Object.keys(requires).length === 0) {
+    alert('Zaznacz przynajmniej jeden warunek dla combo.');
+    return;
+  }
+  const sustain = parseFloat(document.getElementById('kitSustain').value) || 2.0;
+  const cooldown = parseFloat(document.getElementById('kitCooldown').value) || 8.0;
+  const body = {
+    combos: {
+      [rawName]: {
+        requires,
+        sustain_sec: +sustain.toFixed(1),
+        cooldown_sec: +cooldown.toFixed(0),
+        enabled: true,
+        custom: true,
+        source_recording: kitCurrentRec?.session_id || null,
+      }
+    }
+  };
+  const res = await fetch('/api/v1/users/default/settings', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    document.getElementById('kitComboName').value = '';
+    kitLoadCustomCombos();
+    loadSettings();
+    alert(`✅ Combo "${rawName}" zostało zapisane!`);
+  } else {
+    alert('Błąd zapisu combo.');
+  }
+}
+
+async function kitLoadCustomCombos() {
+  try {
+    const res = await fetch('/api/v1/users/default/settings');
+    const data = await res.json();
+    const combos = data.combos || {};
+    const custom = Object.entries(combos).filter(([, v]) => v.custom);
+    const el = document.getElementById('kitComboList');
+    const cnt = document.getElementById('kitCustomCount');
+    if (cnt) cnt.textContent = custom.length || '';
+    if (custom.length === 0) {
+      el.innerHTML = '<div style="font-size:11px;color:var(--tx3);text-align:center;padding:8px">Brak własnych combo</div>';
+      return;
+    }
+    el.innerHTML = custom.map(([name, combo]) => {
+      const reqs = Object.entries(combo.requires || {})
+        .map(([m, c]) => `${METRIC_NAMES[m] || m}${c}`)
+        .join(', ');
+      return `<div class="kit-combo-item">
+        <div class="kit-combo-name">${escapeHtml(name)}<span class="kit-badge-custom">custom</span></div>
+        <button class="kit-combo-del" onclick="kitDeleteCombo('${escapeHtml(name)}')">✕</button>
+        <div class="kit-combo-reqs">${escapeHtml(reqs)}</div>
+        <div class="kit-combo-meta">sustain ${combo.sustain_sec}s · cooldown ${combo.cooldown_sec}s</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('kitLoadCustomCombos error', e);
+  }
+}
+
+async function kitDeleteCombo(name) {
+  if (!confirm(`Usunąć combo "${name}"?`)) return;
+  const res = await fetch(`/api/v1/users/default/settings/combos/${encodeURIComponent(name)}`, {method:'DELETE'});
+  if (res.ok) {
+    kitLoadCustomCombos();
+    loadSettings();
+  } else {
+    alert('Błąd usuwania combo.');
+  }
+}
+
 // ─── Init ─────────────────────────────────────────────────────────
 connect();
 loadSettings();
+kitLoadCustomCombos();
 
 // Fetch mental state model info
 fetch('/api/v1/mental-state').then(r => r.json()).then(data => {

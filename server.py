@@ -28,8 +28,11 @@ import csv
 import json
 import logging
 import os
+import subprocess
 import time
 import threading
+
+import numpy as np
 import webbrowser
 from dataclasses import asdict
 from pathlib import Path
@@ -202,14 +205,44 @@ async def reset_settings(user_id: str, body: dict = None):
     return {"status": "reset", "settings": {"metrics": s.metrics, "combos": s.combos, "global": s.global_settings}}
 
 
+@app.delete("/api/v1/users/{user_id}/settings/combos/{combo_name}")
+async def delete_combo(user_id: str, combo_name: str):
+    combos = state.engine.settings.combos
+    if combo_name not in combos:
+        raise HTTPException(404, f"Combo '{combo_name}' not found")
+    del combos[combo_name]
+    return {"status": "deleted", "combo": combo_name}
+
+
 # ─── Device management ────────────────────────────────────────────────
+
+def _get_bt_state() -> Optional[bool]:
+    """Checks whether the Bluetooth adapter is powered on (macOS only)."""
+    try:
+        result = subprocess.run(
+            ["system_profiler", "SPBluetoothDataType", "-json"],
+            capture_output=True, text=True, timeout=6,
+        )
+        data = json.loads(result.stdout)
+        for item in data.get("SPBluetoothDataType", []):
+            s = str(item.get("controller_state", "")).lower()
+            if s == "on":
+                return True
+            if s == "off":
+                return False
+        return None
+    except Exception:
+        return None
+
 
 @app.get("/api/v1/device/status")
 async def device_status():
+    bt_enabled = await asyncio.to_thread(_get_bt_state) if HAS_BLE_ADAPTER else None
     dev = state.device
     result = {
         "sdk_available": HAS_BRAINACCESS,
         "ble_available": HAS_BLE_ADAPTER,
+        "bt_enabled": bt_enabled,
         "backend": "sdk" if HAS_BRAINACCESS else ("ble" if HAS_BLE_ADAPTER else "none"),
         "source": state.source,
         "simulator_state": state.simulator.state,
@@ -426,6 +459,90 @@ async def delete_recording(session_id: str):
         if p.exists():
             p.unlink()
     return {"ok": True, "deleted": session_id}
+
+
+@app.get("/api/v1/recordings/{session_id}/segment-analysis")
+async def recording_segment_analysis(
+    session_id: str,
+    start_sec: float = 0.0,
+    end_sec: float = -1.0,
+):
+    """Analyse a time-window of a recorded session and return per-metric stats."""
+    meta_path = RECORDINGS_DIR / f"{session_id}_meta.json"
+    csv_path = RECORDINGS_DIR / f"{session_id}_data.csv"
+    if not csv_path.exists():
+        raise HTTPException(404, "Recording not found")
+
+    with open(meta_path) as f:
+        meta = json.load(f)
+    rec_start: float = meta.get("start_time", 0.0)
+    t_start = rec_start + start_sec
+    t_end = rec_start + end_sec if end_sec >= 0 else float("inf")
+
+    raw: dict = {ch: [] for ch in CHANNELS}
+    with open(csv_path) as f:
+        for row in csv.DictReader(f):
+            ts = float(row["timestamp"])
+            if ts < t_start:
+                continue
+            if ts > t_end:
+                break
+            for ch in CHANNELS:
+                raw[ch].append(float(row[ch]))
+
+    n = min(len(raw[ch]) for ch in CHANNELS)
+    if n < SAMPLE_RATE * 2:
+        raise HTTPException(400, "Segment too short — need at least 2 seconds of data")
+
+    seg_dsp = DSPPipeline()
+    seg_eng = FeatureEngine()
+    chunk = max(SAMPLE_RATE // STREAM_HZ, 1)
+    metrics_series: dict = {m: [] for m in ("focus", "calm", "valence", "instability", "stress", "flow")}
+
+    for i in range(0, n - chunk, chunk):
+        chunk_data = {ch: np.array(raw[ch][i: i + chunk]) for ch in CHANNELS}
+        seg_dsp.push(chunk_data)
+        if seg_dsp.has_enough():
+            bp = seg_dsp.compute_band_powers()
+            blinks = seg_dsp.detect_blinks()
+            result = seg_eng.compute(bp, blinks)
+            for m in metrics_series:
+                metrics_series[m].append(result["metrics"][m])
+
+    if not metrics_series["focus"]:
+        raise HTTPException(400, "Not enough data in segment for analysis")
+
+    stats: dict = {}
+    for m, vals in metrics_series.items():
+        arr = np.array(vals)
+        stats[m] = {
+            "mean": round(float(np.mean(arr)), 3),
+            "std":  round(float(np.std(arr)),  3),
+            "min":  round(float(np.min(arr)),  3),
+            "max":  round(float(np.max(arr)),  3),
+        }
+
+    suggestions: dict = {}
+    for m, s in stats.items():
+        mean = s["mean"]
+        if mean >= 0.55:
+            suggestions[m] = f">{round(max(0.0, mean - 0.12), 2)}"
+        elif mean <= 0.35:
+            suggestions[m] = f"<{round(min(1.0, mean + 0.12), 2)}"
+
+    step = max(1, len(metrics_series["focus"]) // 120)
+    series: dict = {m: [round(v, 3) for v in vals[::step]] for m, vals in metrics_series.items()}
+
+    return {
+        "session_id": session_id,
+        "start_sec": start_sec,
+        "end_sec": end_sec,
+        "duration_sec": round(n / SAMPLE_RATE, 1),
+        "sample_count": n,
+        "stats": stats,
+        "suggestions": suggestions,
+        "series": series,
+    }
 
 
 # ─── WebSocket stream ─────────────────────────────────────────────────
