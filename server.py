@@ -44,6 +44,7 @@ from brainlink.calibration import CalibrationSession, CALIBRATION_STEPS
 from brainlink.constants import CHANNELS, PUSH_INTERVAL, RECORDINGS_DIR, SAMPLE_RATE, STREAM_HZ
 from brainlink.dsp import DSPPipeline
 from brainlink.features import FeatureEngine, UserSettings
+from brainlink.mental_state import MentalStateClassifier, STATE_META
 from brainlink.recorder import SessionRecorder
 from brainlink.simulator import EEGSimulator, AUTO_SCENARIOS
 
@@ -89,6 +90,7 @@ class AppState:
         self.last_raw: dict = {}
         self.last_blinks: int = 0
         self.recorder = SessionRecorder()
+        self.mental_state = MentalStateClassifier()
 
     @property
     def device(self):
@@ -324,6 +326,17 @@ async def list_scenarios():
     }
 
 
+# ─── Mental state API ─────────────────────────────────────────────────
+
+@app.get("/api/v1/mental-state")
+async def get_mental_state():
+    return {
+        "model_loaded": state.mental_state.is_loaded,
+        "states": list(STATE_META.keys()),
+        "state_meta": STATE_META,
+    }
+
+
 # ─── Recording ────────────────────────────────────────────────────────
 
 @app.post("/api/v1/recording/start")
@@ -493,6 +506,7 @@ async def _process_cycle(dev, chunk_size: int):
     state.last_blinks = blinks
 
     features = state.engine.compute(band_powers, blinks)
+    mental = state.mental_state.classify(band_powers)
     frame = {
         "ts": int(time.time() * 1000),
         "raw_preview": state.last_raw,
@@ -502,6 +516,7 @@ async def _process_cycle(dev, chunk_size: int):
         },
         "blink_count": blinks,
         "source": state.source,
+        "mental_state": mental,
         "simulator": (
             {
                 "state": state.simulator.state,

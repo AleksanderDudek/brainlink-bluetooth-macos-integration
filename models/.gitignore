@@ -1,0 +1,9 @@
+# Downloaded datasets (large files)
+data/
+!data/.gitkeep
+
+# Trained model weights
+trained/*.joblib
+trained/*.pkl
+trained/*.onnx
+!trained/.gitkeep

@@ -1,0 +1,6 @@
+# Training dependencies (on top of base requirements.txt)
+scikit-learn>=1.5.0
+joblib>=1.4.0
+# Optional for dataset loading:
+# mne>=1.7.0
+# pyedflib>=0.1.30

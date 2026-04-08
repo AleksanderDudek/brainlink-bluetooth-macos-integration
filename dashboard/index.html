@@ -189,6 +189,37 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
 .chart-channel{background:var(--bg2);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px}
 .chart-channel .ch-label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
 .chart-channel canvas{width:100%;height:120px;display:block}
+
+/* Mental State Events */
+.mental-state-card{position:relative;overflow:hidden}
+.mental-state-display{display:flex;align-items:center;gap:14px;padding:12px;background:var(--bg);border-radius:var(--radius);min-height:56px;transition:all 0.3s ease}
+.mental-state-display.active{border:1px solid rgba(255,255,255,0.08)}
+.mental-icon{font-size:28px;line-height:1;flex-shrink:0;width:36px;text-align:center}
+.mental-info{flex:1;min-width:0}
+.mental-label{font-family:var(--font-head);font-size:16px;font-weight:600;letter-spacing:-0.3px;transition:color 0.3s}
+.mental-sub{font-size:11px;color:var(--tx2);margin-top:2px}
+.mental-confidence{width:50px;text-align:right;flex-shrink:0}
+.mental-conf-val{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.mental-conf-label{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px}
+.mental-prob-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px}
+.mental-prob{padding:5px 4px;background:var(--bg);border-radius:4px;text-align:center;transition:all 0.2s;border:1px solid transparent}
+.mental-prob.top{border-color:rgba(255,255,255,0.08)}
+.mental-prob .mp-icon{font-size:14px}
+.mental-prob .mp-name{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.3px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mental-prob .mp-bar{height:3px;background:var(--bg4);border-radius:2px;margin-top:3px;overflow:hidden}
+.mental-prob .mp-fill{height:100%;border-radius:2px;transition:width 0.2s}
+.mental-prob .mp-pct{font-size:10px;font-variant-numeric:tabular-nums;margin-top:1px}
+.mental-state-pulse{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:var(--radius-lg);opacity:0;transition:opacity 0.5s;pointer-events:none}
+@keyframes state-glow{0%,100%{opacity:0.04}50%{opacity:0.1}}
+.mental-state-display.active .mental-state-pulse{animation:state-glow 2s ease infinite}
+
+/* Event log */
+.event-log{max-height:140px;overflow-y:auto;margin-top:8px}
+.event-entry{display:flex;align-items:center;gap:8px;padding:4px 8px;font-size:11px;border-radius:3px;margin-bottom:2px;background:var(--bg);transition:opacity 0.3s}
+.event-entry .ev-time{color:var(--tx3);font-variant-numeric:tabular-nums;flex-shrink:0;width:48px}
+.event-entry .ev-icon{flex-shrink:0;width:18px;text-align:center}
+.event-entry .ev-text{color:var(--tx2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-entry .ev-dur{color:var(--tx3);font-variant-numeric:tabular-nums;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -226,6 +257,28 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:13px
     <div class="card-head">Aktywne combo</div>
     <div class="combo-zone" id="comboZone">
       <span style="font-size:11px;color:var(--tx3)">Brak aktywnych combo</span>
+    </div>
+  </div>
+
+  <!-- Mental State Events -->
+  <div class="card mental-state-card">
+    <div class="mental-state-pulse" id="mentalPulse"></div>
+    <div class="card-head">Mental State<span id="mentalModelBadge" style="font-size:10px;color:var(--tx3);text-transform:none;letter-spacing:0">rule-based</span></div>
+    <div class="mental-state-display" id="mentalDisplay">
+      <div class="mental-icon" id="mentalIcon">—</div>
+      <div class="mental-info">
+        <div class="mental-label" id="mentalLabel">Neutral</div>
+        <div class="mental-sub" id="mentalSub">Waiting for signal...</div>
+      </div>
+      <div class="mental-confidence">
+        <div class="mental-conf-val" id="mentalConfVal">—</div>
+        <div class="mental-conf-label">confidence</div>
+      </div>
+    </div>
+    <div class="mental-prob-grid" id="mentalProbGrid"></div>
+    <div class="card-head" style="margin-top:12px;margin-bottom:6px;font-size:11px">Event Log</div>
+    <div class="event-log" id="eventLog">
+      <div style="font-size:11px;color:var(--tx3);text-align:center;padding:6px">No events yet</div>
     </div>
   </div>
 
@@ -546,6 +599,117 @@ function updateFps() {
   }
 }
 
+// ─── Mental State Events ──────────────────────────────────────────
+const STATE_META = {
+  neutral:       {label:'Neutral',       icon:'—',  color:'#9a9890'},
+  meditation:    {label:'Meditation',    icon:'🧘', color:'#a070ff'},
+  focused:       {label:'Focused',       icon:'🎯', color:'#00e5a0'},
+  relaxed:       {label:'Relaxed',       icon:'🌊', color:'#3d9eff'},
+  visualization: {label:'Visualization', icon:'👁', color:'#ff5ca0'},
+  breathing:     {label:'Breathing',     icon:'🌬', color:'#00d4aa'},
+  drowsy:        {label:'Drowsy',        icon:'😴', color:'#ffb020'},
+  stressed:      {label:'Stressed',      icon:'⚡', color:'#ff4d5a'},
+};
+let prevMentalState = 'neutral';
+let mentalEventLog = [];
+const MAX_EVENTS = 20;
+
+function initMentalProbGrid() {
+  const grid = document.getElementById('mentalProbGrid');
+  let html = '';
+  for (const [key, meta] of Object.entries(STATE_META)) {
+    html += `<div class="mental-prob" id="mp-${key}">
+      <div class="mp-icon">${meta.icon}</div>
+      <div class="mp-name">${meta.label}</div>
+      <div class="mp-bar"><div class="mp-fill" id="mpf-${key}" style="width:0%;background:${meta.color}"></div></div>
+      <div class="mp-pct" id="mpp-${key}" style="color:${meta.color}">0%</div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function updateMentalState(ms) {
+  if (!ms) return;
+  const st = ms.state || 'neutral';
+  const conf = ms.confidence || 0;
+  const dur = ms.duration_sec || 0;
+  const meta = STATE_META[st] || STATE_META.neutral;
+  const probs = ms.all_probs || {};
+
+  // Main display
+  const display = document.getElementById('mentalDisplay');
+  display.className = 'mental-state-display' + (st !== 'neutral' ? ' active' : '');
+  display.style.borderColor = st !== 'neutral' ? meta.color + '40' : 'transparent';
+
+  document.getElementById('mentalIcon').textContent = meta.icon;
+  const labelEl = document.getElementById('mentalLabel');
+  labelEl.textContent = meta.label;
+  labelEl.style.color = meta.color;
+
+  const durStr = dur >= 60 ? Math.floor(dur/60)+'m '+Math.floor(dur%60)+'s' : Math.floor(dur)+'s';
+  document.getElementById('mentalSub').textContent =
+    st !== 'neutral' ? `Active for ${durStr} · ${(conf*100).toFixed(0)}% confident` : 'No dominant state detected';
+
+  document.getElementById('mentalConfVal').textContent = (conf*100).toFixed(0)+'%';
+  document.getElementById('mentalConfVal').style.color = meta.color;
+
+  // Pulse background
+  const pulse = document.getElementById('mentalPulse');
+  pulse.style.background = st !== 'neutral' ? meta.color : 'transparent';
+  pulse.style.opacity = st !== 'neutral' ? '1' : '0';
+
+  // Probability grid
+  for (const [key, smeta] of Object.entries(STATE_META)) {
+    const p = probs[key] || 0;
+    const pct = Math.round(p * 100);
+    const fill = document.getElementById('mpf-'+key);
+    const pctEl = document.getElementById('mpp-'+key);
+    const cell = document.getElementById('mp-'+key);
+    if (fill) fill.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (cell) cell.className = 'mental-prob' + (key === st ? ' top' : '');
+  }
+
+  // Event log — log state transitions
+  if (st !== prevMentalState) {
+    if (st !== 'neutral') {
+      addMentalEvent(st, meta, 'entered');
+    }
+    if (prevMentalState !== 'neutral') {
+      const prevMeta = STATE_META[prevMentalState] || STATE_META.neutral;
+      addMentalEvent(prevMentalState, prevMeta, 'exited');
+    }
+    prevMentalState = st;
+  }
+}
+
+function addMentalEvent(state, meta, action) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const entry = {time: timeStr, state, icon: meta.icon, label: meta.label, color: meta.color, action};
+  mentalEventLog.unshift(entry);
+  if (mentalEventLog.length > MAX_EVENTS) mentalEventLog.pop();
+  renderEventLog();
+}
+
+function renderEventLog() {
+  const el = document.getElementById('eventLog');
+  if (mentalEventLog.length === 0) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--tx3);text-align:center;padding:6px">No events yet</div>';
+    return;
+  }
+  el.innerHTML = mentalEventLog.map(e => {
+    const verb = e.action === 'entered' ? '→ entered' : '← exited';
+    return `<div class="event-entry">
+      <span class="ev-time">${e.time}</span>
+      <span class="ev-icon">${e.icon}</span>
+      <span class="ev-text" style="color:${e.color}">${e.label} ${verb}</span>
+    </div>`;
+  }).join('');
+}
+
+initMentalProbGrid();
+
 // ─── WebSocket ────────────────────────────────────────────────────
 function connect() {
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -576,6 +740,7 @@ function connect() {
     updateBands(frame.band_powers);
     updateMetrics(frame.metrics);
     updateCombos(frame.active_combos, frame.combo_timers);
+    updateMentalState(frame.mental_state);
     updateSimulatorDisplay(frame.simulator);
     updateRecordingFromFrame(frame.recording);
     updateDeviceStatus(frame);
@@ -1209,6 +1374,13 @@ function closeChartOverlay() {
 // ─── Init ─────────────────────────────────────────────────────────
 connect();
 loadSettings();
+
+// Fetch mental state model info
+fetch('/api/v1/mental-state').then(r => r.json()).then(data => {
+  const badge = document.getElementById('mentalModelBadge');
+  badge.textContent = data.model_loaded ? 'ML model' : 'rule-based';
+  badge.style.color = data.model_loaded ? 'var(--acc)' : 'var(--tx3)';
+}).catch(() => {});
 
 // Fetch initial device status
 fetch('/api/v1/device/status').then(r => r.json()).then(data => {
