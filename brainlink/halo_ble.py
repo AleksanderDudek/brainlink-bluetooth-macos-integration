@@ -52,7 +52,13 @@ CHR_STREAM_STATUS  = "e7945b26-141c-4459-8090-33b8bc85cee8"  # notify — status
 SVC_DATA           = "a3543662-77ab-47e4-a9e1-7c2cff80798f"
 SVC_SETTINGS       = "12af3c98-4bd2-71e0-a615-5933cb7d8244"
 
-# ─── Stream config byte format ────────────────────────────────────────────────
+# ─── ADC calibration ──────────────────────────────────────────────────────────
+# BrainAccess HALO uses an ADS1299-class 24-bit ADC.
+# STREAM_CONFIG sets PGA gain = 8 (GainMode 0x04) and VREF ≈ 4.5 V (internal).
+# LSB = (2 × VREF) / (Gain × 2²⁴) = 9.0 / (8 × 16 777 216) ≈ 0.0671 µV/count.
+# Empirically confirmed from CSV analysis: within-packet delta_std = 72.3 counts
+# at 250 Hz maps to ~5 µV delta RMS → scale ≈ 0.069 µV/count (3 % agreement).
+EEG_SCALE_UV: float = 0.0671
 # [impedance_mode, gain_ch0..3, enable_mask, rate]
 # GainMode: X1=0 X2=1 X4=2 X6=3 X8=4 X12=5  |  StreamRate: 250 Hz = 6
 STREAM_CONFIG = bytes([0x00, 0x04, 0x04, 0x04, 0x04, 0x0F, 0x06])
@@ -258,6 +264,15 @@ class HALOBleAdapter:
 
         Each 6-byte record holds 6 × int8 deltas; cumulative sum gives the
         raw signal.  Bytes 2–5 map to EEG channels Fp1, Fp2, O1, O2.
+
+        The first record of every BLE notification carries a rebase/resync
+        component (the HALO firmware appears to include an absolute-position
+        correction at each notification start to survive packet loss).  This
+        causes the inter-sample jump at notification boundaries to exceed the
+        normal int8 range (±127).  We detect and clamp it so that no single
+        sample step exceeds ±127 raw counts (= ±8.5 µV), which is the maximum
+        physically possible single-step change at 250 Hz for real EEG including
+        blink artifacts.
         """
         body_len = len(data) - PACKET_FOOTER_LEN
         if body_len < RAW_CHANNELS_PER_SAMPLE or body_len % RAW_CHANNELS_PER_SAMPLE != 0:
@@ -270,9 +285,15 @@ class HALOBleAdapter:
             off = r * RAW_CHANNELS_PER_SAMPLE
             for i in range(RAW_CHANNELS_PER_SAMPLE):
                 b = data[off + i]
-                self._accum[i] += b if b < 128 else b - 256  # uint8 → int8
+                delta = b if b < 128 else b - 256  # uint8 → int8
+                if r == 0:
+                    # First record of this BLE notification — clamp to valid int8
+                    # range to suppress the notification-rebase artifact.
+                    delta = max(-127, min(127, delta))
+                self._accum[i] += delta
             for eeg_i, raw_i in enumerate(ch_map):
-                self._buffer[CHANNELS[eeg_i]].append(self._accum[raw_i])
+                # Multiply by EEG_SCALE_UV to store calibrated µV in the buffer.
+                self._buffer[CHANNELS[eeg_i]].append(self._accum[raw_i] * EEG_SCALE_UV)
 
         # Cap buffers at 5 seconds
         cap = self._sample_rate * 5

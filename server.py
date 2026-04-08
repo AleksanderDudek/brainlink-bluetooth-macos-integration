@@ -595,16 +595,27 @@ async def _process_cycle(dev, chunk_size: int):
     else:
         raw_data = state.simulator.generate(chunk_size)
 
-    state.last_raw = {
-        ch: raw_data[ch][-4:].tolist()
-        for ch in CHANNELS
-        if len(raw_data[ch]) > 0
-    }
-
     if state.recorder.recording and state.recorder.add_samples(raw_data):
         log.info("Recording auto-stopped (duration reached)")
 
     state.dsp.push(raw_data)
+
+    # Use HP-filtered + notched DSP buffer for display.
+    # Additionally remove any remaining linear trend within the display
+    # window (polyfit detrend) so channels with slow electrode drift still
+    # show proper EEG waveforms centred around 0.
+    last_raw = {}
+    for ch in CHANNELS:
+        buf = state.dsp.buffers[ch]
+        if len(buf) < 5:
+            continue
+        window = buf[-25:]
+        if len(window) >= 3:
+            t = np.arange(len(window), dtype=float)
+            poly = np.polyfit(t, window, 1)
+            window = window - np.polyval(poly, t)
+        last_raw[ch] = [round(float(v), 2) for v in window]
+    state.last_raw = last_raw
 
     if (
         state.calibration_session
